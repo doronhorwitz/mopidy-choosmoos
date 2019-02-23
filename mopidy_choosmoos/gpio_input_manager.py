@@ -1,5 +1,6 @@
 import logging
 from gpiozero import Button, LED
+from .pn7150 import PN7150
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,10 @@ class GPIOManager(object):
             Button(volume_down_pin_number).when_held = self._mute
         if play_pause_pin_number:
             Button(play_pause_pin_number).when_pressed = self._play_pause
+
+        pn7150 = PN7150('/home/pi/pn7150/linux_libnfc-nci')
+        pn7150.when_tag_read = self._play_pause
+        pn7150.start_reading()
 
     def _next(self):
         self._frontend.input('next')
