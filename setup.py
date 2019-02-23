@@ -27,6 +27,7 @@ setup(
         'setuptools',
         'Mopidy >= 1.0',
         'Pykka >= 1.1',
+        'gpiozero >= 1.5.0',
     ],
     entry_points={
         'mopidy.ext': [

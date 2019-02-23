@@ -1,127 +1,49 @@
 import logging
-import time
-
-import RPi.GPIO as GPIO
+from gpiozero import Button, LED
 
 logger = logging.getLogger(__name__)
-longpress_time = 0.3
 
 
-class GPIOManager():
+class GPIOManager(object):
 
-    def __init__(self, frontend, pins):
+    def __init__(self, frontend, led_pin_number=None, next_pin_number=None, previous_pin_number=None,
+                 volume_up_pin_number=None, volume_down_pin_number=None, play_pause_pin_number=None):
+        self._frontend = frontend
+        self._led = LED(led_pin_number) if led_pin_number else None
 
-        self.frontend = frontend
+        if next_pin_number:
+            Button(next_pin_number).when_pressed = self._next
+        if previous_pin_number:
+            Button(previous_pin_number).when_pressed = self._previous
+        if volume_up_pin_number:
+            Button(volume_up_pin_number).when_pressed = self._volume_up
+        if volume_down_pin_number:
+            Button(volume_down_pin_number).when_pressed = self._volume_down
+            Button(volume_down_pin_number).when_held = self._mute
+        if play_pause_pin_number:
+            Button(play_pause_pin_number).when_pressed = self._play_pause
 
-        self.correctlyLoaded = False
+    def _next(self):
+        self._frontend.input('next')
 
-        # Variables to control if it is a longpress
-        self.down_time_previous = -1
-        self.down_time_next = -1
-        self.down_time_main = -1
-        self.down_time_vol_up = -1
-        self.down_time_vol_down = -1
+    def _previous(self):
+        self._frontend.input('previous')
 
-        # Play Led
-        self.led_pin = pins['pin_play_led']
+    def _volume_up(self):
+        self._frontend.input('volume_up')
 
-        try:
-            # GPIO Mode
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.led_pin, GPIO.OUT)
+    def _volume_down(self):
+        self._frontend.input('volume_down')
 
-            # Next Button
-            GPIO.setup(pins['pin_button_next'], GPIO.IN,
-                       pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pins['pin_button_next'],
-                                  GPIO.BOTH, callback=self.next, bouncetime=30)
+    def _play_pause(self):
+        self._frontend.input('play_pause')
 
-            # Previous Button
-            GPIO.setup(pins['pin_button_previous'], GPIO.IN,
-                       pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pins['pin_button_previous'], GPIO.BOTH,
-                                  callback=self.previous, bouncetime=30)
+    def _mute(self):
+        self._frontend.input('mute')
 
-            # Volume Up Button
-            GPIO.setup(pins['pin_button_vol_up'], GPIO.IN,
-                       pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pins['pin_button_vol_up'], GPIO.BOTH,
-                                  callback=self.vol_up, bouncetime=30)
-
-            # Volume Down Button
-            GPIO.setup(pins['pin_button_vol_down'], GPIO.IN,
-                       pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pins['pin_button_vol_down'],
-                                  GPIO.BOTH, callback=self.vol_down,
-                                  bouncetime=30)
-
-            # Main Button
-            GPIO.setup(pins['pin_button_main'], GPIO.IN,
-                       pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pins['pin_button_main'],
-                                  GPIO.BOTH, callback=self.main, bouncetime=30)
-
-            self.correctlyLoaded = True
-
-        except RuntimeError:
-            logger.error("TTSGPIO: Not enough permission " +
-                         "to use GPIO. GPIO input will not work")
-
-    def set_led(self, led_state):
-        if self.correctlyLoaded:
-            GPIO.output(self.led_pin, led_state)
-
-    def previous(self, channel):
-        if GPIO.input(channel) == 1:
-            if self.down_time_previous >= 0:
-                if self.down_time_previous + longpress_time > time.time():
-                    self.frontend.input({'key': 'previous', 'long': False})
-                else:
-                    self.frontend.input({'key': 'previous', 'long': True})
-            self.down_time_previous = -1
-        else:
-            self.down_time_previous = time.time()
-
-    def next(self, channel):
-        if GPIO.input(channel) == 1:
-            if self.down_time_next >= 0:
-                if self.down_time_next + longpress_time > time.time():
-                    self.frontend.input({'key': 'next', 'long': False})
-                else:
-                    self.frontend.input({'key': 'next', 'long': True})
-            self.down_time_next = -1
-        else:
-            self.down_time_next = time.time()
-
-    def main(self, channel):
-        if GPIO.input(channel) == 1:
-            if self.down_time_main >= 0:
-                if self.down_time_main + longpress_time > time.time():
-                    self.frontend.input({'key': 'main', 'long': False})
-                else:
-                    self.frontend.input({'key': 'main', 'long': True})
-            self.down_time_main = -1
-        else:
-            self.down_time_main = time.time()
-
-    def vol_up(self, channel):
-        if GPIO.input(channel) == 1:
-            if self.down_time_vol_up >= 0:
-                if self.down_time_vol_up + longpress_time > time.time():
-                    self.frontend.input({'key': 'volume_up', 'long': False})
-                else:
-                    self.frontend.input({'key': 'volume_up', 'long': True})
-            self.down_time_vol_up = -1
-        else:
-            self.down_time_vol_up = time.time()
-
-    def vol_down(self, channel):
-        if GPIO.input(channel) == 1:
-            if self.down_time_vol_down >= 0:
-                if self.down_time_vol_down + longpress_time > time.time():
-                    self.frontend.input({'key': 'volume_down', 'long': False})
-                else:
-                    self.frontend.input({'key': 'volume_down', 'long': True})
-            self.down_time_vol_down = -1
-        else:
-            self.down_time_vol_down = time.time()
+    def set_led(self, on):
+        if self._led:
+            if on:
+                self._led.on()
+            else:
+                self._led.off()

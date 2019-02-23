@@ -26,9 +26,8 @@ class Extension(ext.Extension):
 
     def get_config_schema(self):
         schema = super(Extension, self).get_config_schema()
-        # TODO: Comment in and edit, or remove entirely
-        #schema['username'] = config.String()
-        #schema['password'] = config.Secret()
+        for pin_name in ['led', 'next', 'previous', 'volume_up', 'volume_down', 'play_pause']:
+            schema['{}_pin_number'.format(pin_name)] = config.Integer(optional=True)
         return schema
 
     def setup(self, registry):
