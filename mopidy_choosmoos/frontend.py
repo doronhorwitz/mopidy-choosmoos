@@ -1,6 +1,7 @@
 import logging
 import pykka
 import traceback
+from gpiozero import Button
 
 from mopidy import core
 from .gpio_input_manager import GPIOManager
@@ -16,6 +17,10 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
         self.core = core
         kwargs = {key: value for key, value in config['choosmoos'].iteritems() if key.endswith('pin_number')}
         self.gpio_manager = GPIOManager(self, **kwargs)
+
+    def on_stop(self):
+        logger.info('Stopping ChoosMoos')
+        self.gpio_manager.stop()
 
     def playback_state_changed(self, old_state, new_state):
         self.gpio_manager.set_led(new_state == core.PlaybackState.PLAYING)
@@ -37,7 +42,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
             self.core.playback.next()
         elif input_event == 'previous':
             self.core.playback.previous()
-        elif input_event['key'] == 'play_pause':
+        elif input_event == 'play_pause':
             if self.core.playback.state.get() == core.PlaybackState.PLAYING:
                 self.core.playback.pause()
             else:

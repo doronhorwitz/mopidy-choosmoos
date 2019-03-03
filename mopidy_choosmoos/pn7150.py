@@ -41,12 +41,7 @@ class PN7150(object):
         self._slave = None
         self.when_tag_read = None
 
-    def stop_reading(self):
-        self._proc.terminate()
-        self._running = False
-        os.close(self._slave)
-
-    def read_thread(self):
+    def _read_thread(self):
         master, self._slave = pty.openpty()
         self._proc = subprocess.Popen([os.path.join(self._nfc_demo_app_location, 'nfcDemoApp'), 'poll'],
                                       stdin=subprocess.PIPE, stdout=self._slave, stderr=self._slave)
@@ -62,9 +57,16 @@ class PN7150(object):
                     text = line[first + 1:last]
                     if self.when_tag_read:
                         self.when_tag_read(text)
-            except OSError:
+            except (IOError, OSError):
                 pass
 
     def start_reading(self):
-        thread = threading.Thread(target=self.read_thread)
-        thread.start()
+        if not self._running:
+            thread = threading.Thread(target=self._read_thread)
+            thread.start()
+
+    def stop_reading(self):
+        if self._running:
+            self._proc.terminate()
+            self._running = False
+            os.close(self._slave)
