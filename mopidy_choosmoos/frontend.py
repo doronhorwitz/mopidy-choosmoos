@@ -4,7 +4,7 @@ import traceback
 
 from mopidy import core
 from .gpio_input_manager import GPIOManager
-from .db import init as init_db, Playlist
+from .db import init as init_db, stop as stop_db, Playlist
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
     def on_stop(self):
         logger.info('Stopping ChoosMoos')
         self.gpio_manager.stop()
+        stop_db()
 
     def input(self, input_event):
         try:

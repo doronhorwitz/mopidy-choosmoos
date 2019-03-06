@@ -16,4 +16,7 @@ class Playlist(BaseModel):
 
 def init():
     db.create_tables([Playlist])
-    db.connect()
+
+
+def stop():
+    db.close()
