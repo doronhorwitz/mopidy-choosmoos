@@ -4,6 +4,7 @@ import traceback
 
 from mopidy import core
 from .gpio_input_manager import GPIOManager
+from .db import init as init_db, Playlist
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
             nfc_demo_app_location=config['nfc_demo_app_location'] or DEFAULT_NFC_DEMO_APP_LOCATION,
             **pin_number_kwargs
         )
+        init_db()
 
     def on_stop(self):
         logger.info('Stopping ChoosMoos')
@@ -35,7 +37,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
         except Exception:
             traceback.print_exc()
 
-    def manage_input(self, input_event):
+    def manage_input(self, input_event, **kwargs):
         if input_event == 'volume_up':
             self._core.playback.volume = self._core.playback.volume.get() + 10
         elif input_event == 'volume_down':
@@ -51,3 +53,6 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
                 self._core.playback.pause()
             else:
                 self._core.playback.play()
+        elif input_event == 'load_playlist':
+            playlist = Playlist.get(Playlist.id == kwargs['playlist_id'])
+            print(playlist.uri if playlist else kwargs['playlist_id'])

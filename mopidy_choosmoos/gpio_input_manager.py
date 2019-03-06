@@ -29,7 +29,7 @@ class GPIOManager(object):
             self._play_pause_button.when_pressed = self._play_pause
 
         self._pn7150 = PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150()
-        self._pn7150.when_tag_read = lambda text: self._play_pause()
+        self._pn7150.when_tag_read = self._load_playlist
         self._pn7150.start_reading()
 
     def stop(self):
@@ -52,3 +52,6 @@ class GPIOManager(object):
 
     def _mute(self):
         self._frontend.input('mute')
+
+    def _load_playlist(self, playlist_id):
+        self._frontend.input('load_playlist', id=playlist_id)

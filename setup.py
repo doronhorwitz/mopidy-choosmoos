@@ -24,10 +24,11 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'setuptools',
-        'Mopidy >= 1.0',
-        'Pykka >= 1.1',
         'gpiozero >= 1.5.0',
+        'Mopidy >= 1.0',
+        'peewee >= 3.9.2',
+        'Pykka >= 1.1',
+        'setuptools',
     ],
     entry_points={
         'mopidy.ext': [
