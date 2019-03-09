@@ -5,6 +5,7 @@ import traceback
 from mopidy import core
 from .gpio_input_manager import GPIOManager
 from .db import init as init_db, stop as stop_db, Playlist
+from .spotify_playlist import SpotifyPlaylist
 
 
 logger = logging.getLogger(__name__)
@@ -18,18 +19,22 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
     def __init__(self, config, core):
         super(ChoosMoosFrontend, self).__init__()
         self._core = core
-        config = config['choosmoos']
-        pin_number_kwargs = {key: value for key, value in config.iteritems() if key.endswith('pin_number')}
-        self.gpio_manager = GPIOManager(
+        pin_number_kwargs = {key: value for key, value in config['choosmoos'].iteritems()
+                             if key.endswith('pin_number')}
+        self._gpio_manager = GPIOManager(
             self,
-            nfc_demo_app_location=config['nfc_demo_app_location'] or DEFAULT_NFC_DEMO_APP_LOCATION,
+            nfc_demo_app_location=config['choosmoos']['nfc_demo_app_location'] or DEFAULT_NFC_DEMO_APP_LOCATION,
             **pin_number_kwargs
+        )
+        self._spotify_playlist = SpotifyPlaylist(
+            client_id=config['spotify']['client_id'],
+            client_secret=config['spotify']['client_secret']
         )
         init_db()
 
     def on_stop(self):
         logger.info('Stopping ChoosMoos')
-        self.gpio_manager.stop()
+        self._gpio_manager.stop()
         stop_db()
 
     def input(self, input_event, **kwargs):
@@ -57,7 +62,8 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
         elif input_event == 'load_playlist':
             playlist = Playlist.select().where(Playlist.id == kwargs['playlist_id']).first()
             if playlist:
-                print(playlist.uri)
+                track_uris = self._spotify_playlist.get_tracks(playlist.uri)
                 self._core.tracklist.clear()
-                self._core.tracklist.add(uri=playlist.uri)
+                for track_uri in track_uris:
+                    self._core.tracklist.add(uri=track_uri)
                 self._core.playback.play()
