@@ -54,4 +54,4 @@ class GPIOManager(object):
         self._frontend.input('mute')
 
     def _load_playlist(self, playlist_id):
-        self._frontend.input('load_playlist', id=playlist_id)
+        self._frontend.input('load_playlist', playlist_id=playlist_id)

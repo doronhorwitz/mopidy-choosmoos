@@ -32,9 +32,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
         self.gpio_manager.stop()
         stop_db()
 
-    def input(self, input_event):
+    def input(self, input_event, **kwargs):
         try:
-            self.manage_input(input_event)
+            self.manage_input(input_event, **kwargs)
         except Exception:
             traceback.print_exc()
 
@@ -55,5 +55,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
             else:
                 self._core.playback.play()
         elif input_event == 'load_playlist':
-            playlist = Playlist.get(Playlist.id == kwargs['playlist_id'])
-            print(playlist.uri if playlist else kwargs['playlist_id'])
+            playlist = Playlist.select().where(Playlist.id == kwargs['playlist_id']).first()
+            if playlist:
+                print(playlist.uri)
+                self._core.tracklist.clear()
+                self._core.tracklist.add(uri=playlist.uri)
+                self._core.playback.play()
