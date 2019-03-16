@@ -5,13 +5,18 @@ import os
 
 from mopidy import config, ext
 
+import mem
+
 from .frontend import ChoosMoosFrontend
+from .message_bus import MessageBus
+from .web import choosmoos_web_factory
+
 
 
 __version__ = '0.1.0'
 
-# TODO: If you need to log, use loggers named after the current Python module
 logger = logging.getLogger(__name__)
+
 
 
 class Extension(ext.Extension):
@@ -32,4 +37,11 @@ class Extension(ext.Extension):
         return schema
 
     def setup(self, registry):
+        mem.message_bus = MessageBus()
+
         registry.add('frontend', ChoosMoosFrontend)
+
+        registry.add('http:app', {
+            'name': self.ext_name,
+            'factory': choosmoos_web_factory,
+        })

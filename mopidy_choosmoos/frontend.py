@@ -3,6 +3,9 @@ import pykka
 import traceback
 
 from mopidy import core
+
+import mem
+
 from .gpio_input_manager import GPIOManager
 from .db import init as init_db, stop as stop_db, Playlist
 from .spotify_playlist import SpotifyPlaylist
@@ -31,6 +34,11 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
             client_secret=config['spotify']['client_secret']
         )
         init_db()
+        mem.message_bus.set_spotify_playlist(self._spotify_playlist)
+        mem.message_bus.set_db_playlist(Playlist)
+
+    def on_start(self):
+        logger.info('Starting ChoosMoos')
 
     def on_stop(self):
         logger.info('Stopping ChoosMoos')
@@ -66,4 +74,5 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
                 self._core.tracklist.clear()
                 for track_uri in track_uris:
                     self._core.tracklist.add(uri=track_uri)
+                    mem.message_bus.send_websocket_message(track_uri)
                 self._core.playback.play()
