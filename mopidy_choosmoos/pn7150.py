@@ -18,6 +18,7 @@
 
 import os
 import pty
+import shlex
 import subprocess
 import threading
 
@@ -42,9 +43,10 @@ class PN7150(object):
         self.when_tag_read = None
 
     def _read_thread(self):
+        cmd = '{nfc_demo_app_path} poll'.format(
+            nfc_demo_app_path=os.path.join(self._nfc_demo_app_location, 'nfcDemoApp'))
         master, self._slave = pty.openpty()
-        self._proc = subprocess.Popen([os.path.join(self._nfc_demo_app_location, 'nfcDemoApp'), 'poll'],
-                                      stdin=subprocess.PIPE, stdout=self._slave, stderr=self._slave)
+        self._proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=self._slave, stderr=self._slave)
         stdout = os.fdopen(master)
 
         self._running = True
@@ -52,6 +54,28 @@ class PN7150(object):
             try:
                 line = stdout.readline()
                 if 'Text :' in line:
+                    first = line.find("'")
+                    last = line.rfind("'")
+                    text = line[first + 1:last]
+                    if self.when_tag_read:
+                        self.when_tag_read(text)
+            except (IOError, OSError):
+                pass
+
+    def _write_thread(self, string):
+        cmd = '{nfc_demo_app_path} write --type=Text -l en -r "{string}"'.format(
+            nfc_demo_app_path=os.path.join(self._nfc_demo_app_location, 'nfcDemoApp'),
+            string=string,
+        )
+        master, self._slave = pty.openpty()
+        self._proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=self._slave, stderr=self._slave)
+        stdout = os.fdopen(master)
+
+        self._running = True
+        while self._running:
+            try:
+                line = stdout.readline()
+                if 'Waiting for a Tag/Device...' in line:
                     first = line.find("'")
                     last = line.rfind("'")
                     text = line[first + 1:last]
