@@ -12,11 +12,9 @@ from .message_bus import MessageBus
 from .web import choosmoos_web_factory
 
 
-
 __version__ = '0.1.0'
 
 logger = logging.getLogger(__name__)
-
 
 
 class Extension(ext.Extension):

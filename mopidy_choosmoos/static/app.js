@@ -1,7 +1,7 @@
 (function($) {
     'use strict';
 
-    var $playlistList;
+    var $playlistTable;
 
     function getCurrentHost() {
         return (typeof document !== "undefined" &&  document.location.host) || "localhost";
@@ -12,15 +12,13 @@
     }
 
     function cacheJqueryObjects() {
-        $playlistList = $('#playlist-list');
+        $playlistTable = $('#playlist-table');
     }
 
     function getAllPlaylists() {
         $.get(getCurrentProtocol() + "://" + getCurrentHost() + "/choosmoos/http/all-playlists").done(function(data){
-            console.log(data);
             $.each(data.playlists, function(_, playlist){
-                console.log(playlist.id);
-                $playlistList.append('<li>' + playlist.id + ': ' + playlist.name + ' - ' + (playlist.db_id || '(not assigned)') + '</li>');
+                $playlistTable.append('<tr><td>' + playlist.id + '</td><td>' + playlist.name + '</td><td>' + (playlist.db_id || '(not assigned)') + '</td><td><button data-id="' + playlist.id +'">Assign</button></td></tr>');
             });
         });
     }
