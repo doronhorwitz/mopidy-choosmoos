@@ -70,9 +70,20 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
         elif input_event == 'load_playlist':
             playlist = Playlist.select().where(Playlist.id == kwargs['playlist_id']).first()
             if playlist:
-                track_uris = self._spotify_playlist.get_tracks(playlist.uri)
+                # clear the playlist
                 self._core.tracklist.clear()
-                for track_uri in track_uris:
+
+                # get the list of tracks in the playlist
+                track_uris = self._spotify_playlist.get_tracks(playlist.uri)
+
+                # if there are any tracks
+                if track_uris:
+                    # add just the first track - mopidy seems to handle better if you just load one track into the
+                    # playlist and play it. And only afterwards load the remainder of the trackers
+                    self._core.tracklist.add(uri=track_uris[0])
+                    # start playing
+                    self._core.playback.play()
+
+                # load the remainder of the tracks
+                for track_uri in track_uris[1:]:
                     self._core.tracklist.add(uri=track_uri)
-                    mem.message_bus.send_websocket_message(track_uri)
-                self._core.playback.play()

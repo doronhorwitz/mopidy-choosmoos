@@ -1,44 +1,83 @@
 (function($) {
     'use strict';
 
-    var $playlistTable;
+    var ws,
+        $playlistTable,
+        $websocketStatus;
 
     function getCurrentHost() {
-        return (typeof document !== "undefined" &&  document.location.host) || "localhost";
+        return (typeof document !== 'undefined' &&  document.location.host) || 'localhost';
     }
 
     function getCurrentProtocol() {
-        return (typeof document !== "undefined" && document.location.protocol === "https:") ? 'https' : 'http';
+        return (typeof document !== 'undefined' && document.location.protocol === 'https:') ? 'https' : 'http';
     }
 
     function cacheJqueryObjects() {
         $playlistTable = $('#playlist-table');
+        $websocketStatus = $('#websocket-status');
     }
 
     function getAllPlaylists() {
-        $.get(getCurrentProtocol() + "://" + getCurrentHost() + "/choosmoos/http/all-playlists").done(function(data){
+        return $.get(getCurrentProtocol() + "://" + getCurrentHost() + '/choosmoos/http/all-playlists').then(function(data){
             $.each(data.playlists, function(_, playlist){
-                $playlistTable.append('<tr><td>' + playlist.id + '</td><td>' + playlist.name + '</td><td>' + (playlist.db_id || '(not assigned)') + '</td><td><button data-id="' + playlist.id +'">Assign</button></td></tr>');
+                $playlistTable.append('<tr><td>' + playlist.id + '</td><td>' + playlist.name + '</td><td>' + (playlist.db_id || '(not assigned)') + '</td><td><button data-id="' + playlist.id +'" disabled=\"disabled\">Assign</button></td></tr>');
+            });
+            $playlistTable.find('button').on('click', function(e){
+                e.preventDefault();
+                var $button = $(this),
+                    playListId = $button.data('id');
+
+                $button.text("Requested...");
+                wsSend('assign_tag_to_playlist', {
+                    'playlist_id': playListId
+                });
             });
         });
     }
 
+    function wsSend(action, params) {
+        var dataToSend = {
+            'action': action
+        };
+        if (params) {
+            dataToSend['params'] = params;
+        }
+        ws.send(JSON.stringify(dataToSend));
+    }
+
     function openWebSocket() {
-        var protocol = getCurrentProtocol() === 'https' ? "wss" : "ws",
-            ws = new WebSocket(protocol + "://" + getCurrentHost() + "/choosmoos/ws/");
+        var protocol = getCurrentProtocol() === 'https' ? 'wss' : 'ws';
+        ws = new WebSocket(protocol + "://" + getCurrentHost() + '/choosmoos/ws/');
 
         ws.onopen = function (event) {
-            ws.send("Here's some text that the server is urgently awaiting!");
+            wsSend('open_websocket');
         };
 
         ws.onmessage = function (event) {
-            console.log(event.data);
+            var data = JSON.parse(event.data),
+                action = data['action'];
+
+            if (action === 'acknowledge_open_websocket') {
+                $websocketStatus.text("Ready");
+                $playlistTable.find("button").removeAttr("disabled");
+            } else if (action === 'tag_write_ready') {
+                var playlistId = data['params']['playlist_id'];
+                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Ready to assign tag...");
+            } else if (action === 'tag_assign_success') {
+                var playlistId = data['params']['playlist_id'];
+                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Tag assigned successfully");
+            } else if (action === 'tag_assign_failure') {
+                var playlistId = data['params']['playlist_id'];
+                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Tag assign failed");
+            }
         }
     }
 
     $(function(){
         cacheJqueryObjects();
-        openWebSocket();
-        getAllPlaylists();
+        getAllPlaylists().done(function(){
+            openWebSocket();
+        });
     });
 }(jQuery));

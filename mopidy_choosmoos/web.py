@@ -5,6 +5,10 @@ import tornado.web
 
 import mem
 
+from uuid import uuid4
+
+from .utils import validate_uuid4
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,29 +56,50 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         mem.message_bus.set_websocket(self)
 
+    def send_json_msg(self, action, params=None):
+        data_to_send = {
+            'action': action
+        }
+        if params:
+            data_to_send['params'] = params
+        self.write_message(tornado.escape.json_encode(data_to_send))
+
     def on_message(self, message):
         if not message:
             return
 
         logger.debug("Message received: %s", message)
 
-        self.write_message('hi back!')
+        data = tornado.escape.json_decode(message)
+        action = data['action']
+        if action == 'open_websocket':
+            self.send_json_msg('acknowledge_open_websocket')
+        elif action == 'assign_tag_to_playlist':
+            playlist_id = data['params']['playlist_id']
+            mem.message_bus.pn7150_stop_reading()
+            self.send_json_msg('tag_write_ready', {
+                'playlist_id': playlist_id
+            })
+            existing_text = mem.message_bus.pn7150_read_once()
+            uuid = None
+            if validate_uuid4(existing_text):
+                uuid = existing_text
+            else:
+                new_uuid = str(uuid4())
+                write_success = mem.message_bus.pn7150_write(new_uuid)
+                if write_success:
+                    uuid = new_uuid
+                else:
+                    self.send_json_msg('tag_assign_failure', {
+                        'playlist_id': playlist_id
+                    })
 
-        # data = tornado.escape.json_decode(message)
-        #
-        # if type(data['data']) is dict:
-        #     args = data['data']
-        # else:
-        #     args = {}
-        #
-        # call = getattr(mem.queuemanager, data['method'])(**args)
-        #
-        # result = {
-        #     'call': call,
-        #     'id': data['id']
-        # }
-        #
-        # self.write_message(json.dumps(result))
+            if uuid:
+                mem.message_bus.assign_playlist_id_to_tag(playlist_id, uuid)
+                self.send_json_msg('tag_assign_success', {
+                    'playlist_id': playlist_id
+                })
+            mem.message_bus.pn7150_start_reading()
 
     def on_close(self):
         logger.debug("QueueManager WebSocket closed")

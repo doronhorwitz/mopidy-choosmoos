@@ -28,6 +28,7 @@ _MAX_WRITE_RETRIES = 5
 _OUTPUT_TEXT = 'Text :'
 _OUTPUT_TAG_WRITTEN = 'Write Tag OK'
 _OUTPUT_READ_FAILED = 'Read NDEF Content Failed'
+_OUTPUT_TAG_REMOVED = 'NFC Tag Lost'
 _CMD_POLL = '{nfc_demo_app_path} poll'
 _CMD_WRITE = '{nfc_demo_app_path} write --type=Text -l en -r "{new_text}"'
 _NFC_DEMO_APP_NAME = 'nfcDemoApp'
@@ -91,7 +92,7 @@ class PN7150(object):
             except (IOError, OSError):
                 pass
 
-    def _write_once(self, new_text):
+    def _write_once(self, new_text, wait_for_tag_remove=True):
         cmd = _CMD_WRITE.format(nfc_demo_app_path=self._nfc_demo_app_path, new_text=new_text)
         master, slave = pty.openpty()
         proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
@@ -99,8 +100,9 @@ class PN7150(object):
 
         been_written = False
         been_checked = False
+        been_removed = not wait_for_tag_remove
         checked_text = None
-        while not been_written or not been_checked:
+        while not been_written or not been_checked or not been_removed:
             line = stdout.readline()
             if _OUTPUT_TAG_WRITTEN in line:
                 been_written = True
@@ -109,6 +111,8 @@ class PN7150(object):
                 last = line.rfind("'")
                 checked_text = line[first + 1:last]
                 been_checked = True
+            elif _OUTPUT_TAG_REMOVED in line:
+                been_removed = True
 
         proc.terminate()
         os.close(slave)
@@ -130,6 +134,9 @@ class PN7150(object):
             os.close(self._slave)
 
     def read_once(self):
+        restart_reading_after = self._read_running
+        self.stop_reading()
+
         cmd = _CMD_POLL.format(nfc_demo_app_path=self._nfc_demo_app_path)
         master, slave = pty.openpty()
         proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
@@ -149,18 +156,27 @@ class PN7150(object):
 
         proc.terminate()
         os.close(slave)
+
+        if restart_reading_after:
+            self.start_reading()
+
         return text
 
     def write(self, new_text):
-        if self._read_running:
-            self.stop_reading()
+        restart_reading_after = self._read_running
+        self.stop_reading()
 
         existing_text = self.read_once()
+        success = False
         if existing_text != new_text:
-            success = False
             count = 0
             while not success and count < _MAX_WRITE_RETRIES:
                 success = self._write_once(new_text)
             return success
         else:
-            return True
+            success = True
+
+        if restart_reading_after:
+            self.start_reading()
+
+        return success

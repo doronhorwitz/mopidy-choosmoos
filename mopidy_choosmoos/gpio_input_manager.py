@@ -1,4 +1,5 @@
 import logging
+import mem
 from gpiozero import Button
 from .pn7150 import PN7150
 
@@ -28,12 +29,14 @@ class GPIOManager(object):
             self._play_pause_button = Button(play_pause_pin_number)
             self._play_pause_button.when_pressed = self._play_pause
 
-        self._pn7150 = PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150()
-        self._pn7150.when_tag_read = self._load_playlist
-        self._pn7150.start_reading()
+        pn7150 = PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150()
+        pn7150.when_tag_read = self._load_playlist
+        pn7150.start_reading()
+
+        mem.message_bus.set_pn7150(pn7150)
 
     def stop(self):
-        self._pn7150.stop_reading()
+        mem.message_bus.pn7150_stop_reading()
 
     def _next(self):
         self._frontend.input('next')
