@@ -74,6 +74,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         action = data['action']
         if action == 'open_websocket':
             self.send_json_msg('acknowledge_open_websocket')
+        if action == "initialise_tag":
+            uuid = None
+            mem.message_bus.pn7150_stop_reading()
+            existing_text = mem.message_bus.pn7150_read_once()
+
+            if validate_uuid4(existing_text):
+                uuid = existing_text
+                mem.message_bus.pn7150_read_once()
+            else:
+                new_uuid = str(uuid4())
+                write_success = mem.message_bus.pn7150_write(new_uuid)
+                if write_success:
+                    uuid = new_uuid
+
+
         elif action == 'assign_tag_to_playlist':
             playlist_id = data['params']['playlist_id']
             mem.message_bus.pn7150_stop_reading()

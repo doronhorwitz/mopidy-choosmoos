@@ -133,7 +133,7 @@ class PN7150(object):
             self._read_running = False
             os.close(self._slave)
 
-    def read_once(self):
+    def read_once(self, wait_for_tag_remove=True):
         restart_reading_after = self._read_running
         self.stop_reading()
 
@@ -143,8 +143,9 @@ class PN7150(object):
         stdout = os.fdopen(master)
 
         been_read = False
+        been_removed = False
         text = None
-        while not been_read:
+        while not been_read or not been_removed:
             line = stdout.readline()
             if _OUTPUT_TEXT in line:
                 first = line.find("'")
@@ -153,6 +154,8 @@ class PN7150(object):
                 been_read = True
             elif _OUTPUT_READ_FAILED in line:
                 been_read = True
+            elif _OUTPUT_TAG_REMOVED in line:
+                been_removed = True
 
         proc.terminate()
         os.close(slave)

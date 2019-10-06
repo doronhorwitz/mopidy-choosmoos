@@ -53,9 +53,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, core.CoreListener):
 
     def manage_input(self, input_event, **kwargs):
         if input_event == 'volume_up':
-            self._core.playback.volume = self._core.playback.volume.get() + 10
+            self._core.playback.volume = self._core.playback.volume.get() + 5
         elif input_event == 'volume_down':
-            self._core.playback.volume = self._core.playback.volume.get() - 10
+            self._core.playback.volume = self._core.playback.volume.get() - 5
         elif input_event == 'mute':
             self._core.playback.volume = 0
         elif input_event == 'next':
