@@ -4,7 +4,7 @@ from mopidy import core as mopidy_core
 
 from .buttons import Buttons
 from .db import db
-from .globals import set_global, rfid, db, core as core_global, buttons, spotify_playlist, db as db_global
+from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global
 from .rfid import RFID
 from .spotify_playlist import SpotifyPlaylist
 
@@ -24,6 +24,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
     @staticmethod
     def _set_globals(config, core):
 
+        # database
         set_global(db_global, db)
         db.init()
 

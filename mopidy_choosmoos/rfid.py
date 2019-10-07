@@ -5,7 +5,7 @@ from .utils.pn7150 import PN7150
 class RFID(object):
 
     def __init__(self, nfc_demo_app_location=None):
-        self._pn7150 = PN7150(nfc_demo_app_location)
+        self._pn7150 = PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150()
 
     def start_play_mode(self):
         self._pn7150.when_tag_read = self._load_playlist

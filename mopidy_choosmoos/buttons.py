@@ -39,7 +39,8 @@ class Buttons(object):
                 button.when_pressed = getattr(self, '_{}'.format(button_name))
                 setattr(self, '_{}_button'.format(button_name), button)
 
-        self._volume_down_button.when_held = self._mute
+        if self._volume_down_button:
+            self._volume_down_button.when_held = self._mute
 
     @staticmethod
     def _next():

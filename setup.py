@@ -29,6 +29,7 @@ setup(
         'peewee >= 3.9.2',
         'Pykka >= 1.1',
         'setuptools',
+        'tornado',
     ],
     entry_points={
         'mopidy.ext': [

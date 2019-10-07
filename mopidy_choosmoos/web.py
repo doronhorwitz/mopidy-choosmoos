@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-import tornado.web
+import tornado.websocket
 from uuid import uuid4
 
 from .globals import set_global, reset_global, rfid, db, spotify_playlist, websocket
@@ -111,7 +111,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     #     reset_global(websocket)
 
 
-def choosmoos_web_factory():
+def choosmoos_web_factory(config, core):
     path = os.path.join(os.path.dirname(__file__), 'static')
 
     return [
