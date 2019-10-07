@@ -3,6 +3,7 @@ import pykka
 from mopidy import core as mopidy_core
 
 from .buttons import Buttons
+from .core import Core
 from .db import db
 from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global
 from .rfid import RFID
@@ -10,9 +11,6 @@ from .spotify_playlist import SpotifyPlaylist
 
 
 logger = logging.getLogger(__name__)
-
-
-DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/pn7150/linux_libnfc-nci'
 
 
 class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
@@ -26,10 +24,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
 
         # database
         set_global(db_global, db)
-        db.init()
 
         # mopidy core
-        set_global(core_global, core)
+        set_global(core_global, Core(core))
 
         # buttons
         set_global(buttons, Buttons(**{key: value for key, value in config['choosmoos'].iteritems()
@@ -46,6 +43,8 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
 
     def on_start(self):
         logger.info('Starting ChoosMoos')
+        rfid.start_reading()
+        db.init()
 
     def on_stop(self):
         logger.info('Stopping ChoosMoos')

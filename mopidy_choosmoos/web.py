@@ -65,19 +65,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         action = data['action']
         if action == 'open_websocket':
             self.send_json_msg('acknowledge_open_websocket')
-        if action == "initialise_tag":
-            uuid = None
-            rfid.stop_reading()
-            existing_text = rfid.read_once()
-
-            if validate_uuid4(existing_text):
-                uuid = existing_text
-                rfid.read_once()
-            else:
-                new_uuid = str(uuid4())
-                write_success = rfid.write(new_uuid)
-                if write_success:
-                    uuid = new_uuid
 
         elif action == 'assign_tag_to_playlist':
             playlist_id = data['params']['playlist_id']
@@ -98,7 +85,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     self.send_json_msg('tag_assign_failure', {
                         'playlist_id': playlist_id
                     })
-
             if uuid:
                 db.assign_playlist_id_to_tag(playlist_id, uuid)
                 self.send_json_msg('tag_assign_success', {
@@ -106,9 +92,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 })
             rfid.start_reading()
 
-    # def on_close(self):
-    #     logger.debug("QueueManager WebSocket closed")
-    #     reset_global(websocket)
+    def on_close(self):
+        logger.debug("QueueManager WebSocket closed")
+        reset_global(websocket)
 
 
 def choosmoos_web_factory(config, core):

@@ -1,15 +1,15 @@
 from .globals import core
 from .utils.pn7150 import PN7150
 
+_DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
+
 
 class RFID(object):
 
     def __init__(self, nfc_demo_app_location=None):
-        self._pn7150 = PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150()
-
-    def start_play_mode(self):
+        self._pn7150 = (
+            PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150(_DEFAULT_NFC_DEMO_APP_LOCATION))
         self._pn7150.when_tag_read = self._load_playlist
-        self._pn7150.start_reading()
 
     def write(self, text):
         return self._pn7150.write(text)

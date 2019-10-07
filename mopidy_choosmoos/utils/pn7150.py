@@ -35,6 +35,10 @@ _NFC_DEMO_APP_NAME = 'nfcDemoApp'
 _NFC_DEMO_APP_DEFAULT_LOCATION = '/usr/sbin'
 
 
+class PN7150Exception(Exception):
+    pass
+
+
 class PN7150(object):
     """
     Can use this class as follows:
@@ -92,7 +96,51 @@ class PN7150(object):
             except (IOError, OSError):
                 pass
 
-    def _write_once(self, new_text, wait_for_tag_remove=True):
+    @property
+    def _nfc_demo_app_path(self):
+        return os.path.join(self._nfc_demo_app_location, _NFC_DEMO_APP_NAME)
+
+    def start_reading(self):
+        if not self._read_running:
+            thread = threading.Thread(target=self._read_thread)
+            thread.start()
+
+    def stop_reading(self):
+        if self._read_running:
+            self._proc.terminate()
+            self._read_running = False
+            os.close(self._slave)
+
+    def read_once(self):
+        if self._read_running:
+            raise PN7150Exception("cannot read_once while a continuous read is running")
+
+        cmd = _CMD_POLL.format(nfc_demo_app_path=self._nfc_demo_app_path)
+        master, slave = pty.openpty()
+        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
+        stdout = os.fdopen(master)
+
+        been_read = False
+        been_removed = False
+        text = None
+        while not been_read or not been_removed:
+            line = stdout.readline()
+            if _OUTPUT_TEXT in line:
+                first = line.find("'")
+                last = line.rfind("'")
+                text = line[first + 1:last]
+                been_read = True
+            elif _OUTPUT_READ_FAILED in line:
+                been_read = True
+            elif _OUTPUT_TAG_REMOVED in line:
+                been_removed = True
+
+        proc.terminate()
+        os.close(slave)
+
+        return text
+
+    def _write(self, new_text, wait_for_tag_remove=True):
         cmd = _CMD_WRITE.format(nfc_demo_app_path=self._nfc_demo_app_path, new_text=new_text)
         master, slave = pty.openpty()
         proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
@@ -118,68 +166,18 @@ class PN7150(object):
         os.close(slave)
         return checked_text == new_text
 
-    @property
-    def _nfc_demo_app_path(self):
-        return os.path.join(self._nfc_demo_app_location, _NFC_DEMO_APP_NAME)
-
-    def start_reading(self):
-        if not self._read_running:
-            thread = threading.Thread(target=self._read_thread)
-            thread.start()
-
-    def stop_reading(self):
-        if self._read_running:
-            self._proc.terminate()
-            self._read_running = False
-            os.close(self._slave)
-
-    def read_once(self, wait_for_tag_remove=True):
-        restart_reading_after = self._read_running
-        self.stop_reading()
-
-        cmd = _CMD_POLL.format(nfc_demo_app_path=self._nfc_demo_app_path)
-        master, slave = pty.openpty()
-        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
-        stdout = os.fdopen(master)
-
-        been_read = False
-        been_removed = False
-        text = None
-        while not been_read or not been_removed:
-            line = stdout.readline()
-            if _OUTPUT_TEXT in line:
-                first = line.find("'")
-                last = line.rfind("'")
-                text = line[first + 1:last]
-                been_read = True
-            elif _OUTPUT_READ_FAILED in line:
-                been_read = True
-            elif _OUTPUT_TAG_REMOVED in line:
-                been_removed = True
-
-        proc.terminate()
-        os.close(slave)
-
-        if restart_reading_after:
-            self.start_reading()
-
-        return text
-
     def write(self, new_text):
-        restart_reading_after = self._read_running
-        self.stop_reading()
+        if self._read_running:
+            raise PN7150Exception("cannot write while a continuous read is running")
 
         existing_text = self.read_once()
         success = False
         if existing_text != new_text:
             count = 0
             while not success and count < _MAX_WRITE_RETRIES:
-                success = self._write_once(new_text)
+                success = self._write(new_text)
             return success
         else:
             success = True
-
-        if restart_reading_after:
-            self.start_reading()
 
         return success
