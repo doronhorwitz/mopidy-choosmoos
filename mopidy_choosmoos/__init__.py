@@ -5,10 +5,8 @@ import os
 
 from mopidy import config, ext
 
-import mem
-
+from .db import db
 from .frontend import ChoosMoosFrontend
-from .message_bus import MessageBus
 from .web import choosmoos_web_factory
 
 
@@ -35,8 +33,6 @@ class Extension(ext.Extension):
         return schema
 
     def setup(self, registry):
-        mem.message_bus = MessageBus()
-
         registry.add('frontend', ChoosMoosFrontend)
 
         registry.add('http:app', {

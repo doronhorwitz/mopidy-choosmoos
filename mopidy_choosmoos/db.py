@@ -1,12 +1,12 @@
 from peewee import Model, SqliteDatabase, TextField, UUIDField
 
 
-db = SqliteDatabase('choosmoos.db')
+_db = SqliteDatabase('choosmoos.db')
 
 
 class BaseModel(Model):
     class Meta(object):
-        database = db
+        database = _db
 
 
 class Playlist(BaseModel):
@@ -17,9 +17,22 @@ class Playlist(BaseModel):
         table_name = 'playlists'
 
 
-def init():
-    db.create_tables([Playlist])
+class _DbWrapper(object):
+    @staticmethod
+    def init():
+        _db.create_tables([Playlist])
+
+    @staticmethod
+    def close():
+        _db.close()
+
+    @staticmethod
+    def get_all_playlists():
+        return list(Playlist.select())
+
+    @staticmethod
+    def assign_playlist_id_to_tag(playlist_id, tag_uuid):
+        Playlist.replace(id=tag_uuid, uri=playlist_id).execute()
 
 
-def stop():
-    db.close()
+db = _DbWrapper
