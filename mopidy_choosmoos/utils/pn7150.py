@@ -111,7 +111,7 @@ class PN7150(object):
             self._read_running = False
             os.close(self._slave)
 
-    def read_once(self):
+    def read_once(self, wait_for_tag_removal=True):
         if self._read_running:
             raise PN7150Exception("cannot read_once while a continuous read is running")
 
@@ -121,7 +121,7 @@ class PN7150(object):
         stdout = os.fdopen(master)
 
         been_read = False
-        been_removed = False
+        been_removed = not wait_for_tag_removal
         text = None
         while not been_read or not been_removed:
             line = stdout.readline()
@@ -140,7 +140,7 @@ class PN7150(object):
 
         return text
 
-    def _write(self, new_text, wait_for_tag_remove=True):
+    def _write(self, new_text, wait_for_tag_removal=True):
         cmd = _CMD_WRITE.format(nfc_demo_app_path=self._nfc_demo_app_path, new_text=new_text)
         master, slave = pty.openpty()
         proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
@@ -148,7 +148,7 @@ class PN7150(object):
 
         been_written = False
         been_checked = False
-        been_removed = not wait_for_tag_remove
+        been_removed = not wait_for_tag_removal
         checked_text = None
         while not been_written or not been_checked or not been_removed:
             line = stdout.readline()
@@ -166,16 +166,16 @@ class PN7150(object):
         os.close(slave)
         return checked_text == new_text
 
-    def write(self, new_text):
+    def write(self, new_text, wait_for_tag_removal=True):
         if self._read_running:
             raise PN7150Exception("cannot write while a continuous read is running")
 
-        existing_text = self.read_once()
+        existing_text = self.read_once(wait_for_tag_removal=wait_for_tag_removal)
         success = False
         if existing_text != new_text:
             count = 0
             while not success and count < _MAX_WRITE_RETRIES:
-                success = self._write(new_text)
+                success = self._write(new_text, wait_for_tag_removal=wait_for_tag_removal)
             return success
         else:
             success = True

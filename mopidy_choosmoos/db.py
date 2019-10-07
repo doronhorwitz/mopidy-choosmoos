@@ -10,8 +10,8 @@ class BaseModel(Model):
 
 
 class Playlist(BaseModel):
-    id = UUIDField(primary_key=True)
-    uri = TextField()
+    tag_uuid = UUIDField(primary_key=True)
+    playlist_uri = TextField()
 
     class Meta(object):
         table_name = 'playlists'
@@ -31,8 +31,8 @@ class _DbWrapper(object):
         return list(Playlist.select())
 
     @staticmethod
-    def assign_playlist_id_to_tag(playlist_id, tag_uuid):
-        Playlist.replace(id=tag_uuid, uri=playlist_id).execute()
+    def assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri):
+        Playlist.replace(tag_uuid=tag_uuid, playlist_uri=playlist_uri).execute()
 
 
 db = _DbWrapper

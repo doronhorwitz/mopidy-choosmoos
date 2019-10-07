@@ -1,9 +1,30 @@
 (function($) {
     'use strict';
 
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
+    if (!String.prototype.startsWith) {
+        Object.defineProperty(String.prototype, 'startsWith', {
+            value: function(search, rawPos) {
+                var pos = rawPos > 0 ? rawPos|0 : 0;
+                return this.substring(pos, pos + search.length) === search;
+            }
+        });
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith#Polyfill
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(search, this_len) {
+            if (this_len === undefined || this_len > this.length) {
+                this_len = this.length;
+            }
+            return this.substring(this_len - search.length, this_len) === search;
+        };
+    }
+
     var ws,
         $playlistTable,
-        $websocketStatus;
+        $websocketStatus,
+        rowTemplateFunc;
 
     function getCurrentHost() {
         return (typeof document !== 'undefined' &&  document.location.host) || 'localhost';
@@ -16,21 +37,26 @@
     function cacheJqueryObjects() {
         $playlistTable = $('#playlist-table');
         $websocketStatus = $('#websocket-status');
+        rowTemplateFunc = doT.template($('#row-template').text());
     }
 
     function getAllPlaylists() {
         return $.get(getCurrentProtocol() + "://" + getCurrentHost() + '/choosmoos/http/all-playlists').then(function(data){
             $.each(data.playlists, function(_, playlist){
-                $playlistTable.append('<tr><td>' + playlist.id + '</td><td>' + playlist.name + '</td><td>' + (playlist.db_id || '(not assigned)') + '</td><td><button data-id="' + playlist.id +'" disabled=\"disabled\">Assign</button></td></tr>');
+                $playlistTable.append(rowTemplateFunc({
+                    playlistName: playlist.name,
+                    tagUuid: playlist.tag_uuid,
+                    playlistUri: playlist.playlist_uri
+                }));
             });
             $playlistTable.find('button').on('click', function(e){
                 e.preventDefault();
                 var $button = $(this),
-                    playListId = $button.data('id');
+                    playListUri = $button.data('playlist-uri');
 
                 $button.text("Requested...");
                 wsSend('assign_tag_to_playlist', {
-                    'playlist_id': playListId
+                    'playlist_uri': playListUri
                 });
             });
         });
@@ -60,16 +86,33 @@
 
             if (action === 'acknowledge_open_websocket') {
                 $websocketStatus.text("Ready");
-                $playlistTable.find("button").removeAttr("disabled");
-            } else if (action === 'tag_write_ready') {
-                var playlistId = data['params']['playlist_id'];
-                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Ready to assign tag...");
-            } else if (action === 'tag_assign_success') {
-                var playlistId = data['params']['playlist_id'];
-                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Tag assigned successfully");
-            } else if (action === 'tag_assign_failure') {
-                var playlistId = data['params']['playlist_id'];
-                $playlistTable.find('button[data-id="' + playlistId + '"]').text("Tag assign failed");
+            } else if (action.startsWith('tag_')) {
+                var buttonText = null,
+                    playlistUri = data['params']['playlist_uri'],
+                    tagUuid = data['params']['tag_uuid'],
+                    $playlistRow = $playlistTable.find('tr[data-playlist-uri="' + playlistUri + '"]');
+
+                if (action.endsWith('write_ready')) {
+                    buttonText = "Ready to assign tag...";
+                } else if (action.endsWith('assign_success')) {
+                    buttonText = "Assign";
+                    var $oldPlaylistRow = $playlistTable.find('tr[data-tag-uuid="' + tagUuid + '"]'),
+                        oldPlaylistUri = $oldPlaylistRow.attr('data-playlist-uri');
+
+                    if (oldPlaylistUri !== playlistUri) {
+                        $oldPlaylistRow.removeAttr('data-tag-uuid');
+                        $oldPlaylistRow.find('.tag-uuid').text('(not assigned)');
+                        $playlistRow.attr('data-tag-uuid', tagUuid);
+                        $playlistRow.find('.tag-uuid').text(tagUuid);
+                    }
+                } else if (action.endsWith('assign_failure')) {
+                    buttonText = "Tag assign failed";
+                }
+
+                if (buttonText) {
+                    $playlistRow.find('button').text(buttonText)
+
+                }
             }
         }
     }

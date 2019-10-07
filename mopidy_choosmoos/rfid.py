@@ -11,11 +11,11 @@ class RFID(object):
             PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150(_DEFAULT_NFC_DEMO_APP_LOCATION))
         self._pn7150.when_tag_read = self._load_playlist
 
-    def write(self, text):
-        return self._pn7150.write(text)
+    def write(self, text, wait_for_tag_removal=True):
+        return self._pn7150.write(text, wait_for_tag_removal=wait_for_tag_removal)
 
-    def read_once(self):
-        return self._pn7150.read_once()
+    def read_once(self, wait_for_tag_removal=True):
+        return self._pn7150.read_once(wait_for_tag_removal=wait_for_tag_removal)
 
     def stop_reading(self):
         self._pn7150.stop_reading()

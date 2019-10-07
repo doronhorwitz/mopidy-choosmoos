@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import tornado.escape
+import tornado.web
 import tornado.websocket
 from uuid import uuid4
 
@@ -25,12 +27,13 @@ class HttpHandler(tornado.web.RequestHandler):
         if slug == 'all-playlists':
             all_spotify_playlists = spotify_playlist.get_all_playlists()
             all_db_playlists = db.get_all_playlists()
-            db_playlist_lookup = {db_playlist.uri.split(':')[-1]: str(db_playlist.id)
+            db_playlist_lookup = {db_playlist.uri.split(':')[-1]: str(db_playlist.tag_uuid)
                                   for db_playlist in all_db_playlists}
 
             playlists = [
-                dict(name=spotify_playlist_["name"], id=spotify_playlist_["id"],
-                     db_id=db_playlist_lookup.get(spotify_playlist_["id"], None))
+                dict(name=spotify_playlist_["name"],
+                     playlist_uri=spotify_playlist_["uri"],
+                     tag_uuid=db_playlist_lookup.get(spotify_playlist_["uri"], None))
                 for spotify_playlist_ in all_spotify_playlists]
 
             self.write(json.dumps({"playlists": playlists}))
@@ -39,6 +42,9 @@ class HttpHandler(tornado.web.RequestHandler):
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
+
+    def data_received(self, chunk):
+        pass
 
     def check_origin(self, origin):
         return True
@@ -67,28 +73,29 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.send_json_msg('acknowledge_open_websocket')
 
         elif action == 'assign_tag_to_playlist':
-            playlist_id = data['params']['playlist_id']
+            playlist_uri = data['params']['playlist_uri']
             rfid.stop_reading()
             self.send_json_msg('tag_write_ready', {
-                'playlist_id': playlist_id
+                'playlist_uri': playlist_uri
             })
-            existing_text = rfid.read_once()
-            uuid = None
+            existing_text = rfid.read_once(wait_for_tag_removal=False)
+            tag_uuid = None
             if validate_uuid4(existing_text):
-                uuid = existing_text
+                tag_uuid = existing_text
             else:
                 new_uuid = str(uuid4())
-                write_success = rfid.write(new_uuid)
+                write_success = rfid.write(new_uuid, wait_for_tag_removal=False)
                 if write_success:
-                    uuid = new_uuid
+                    tag_uuid = new_uuid
                 else:
                     self.send_json_msg('tag_assign_failure', {
-                        'playlist_id': playlist_id
+                        'playlist_uri': playlist_uri
                     })
-            if uuid:
-                db.assign_playlist_id_to_tag(playlist_id, uuid)
+            if tag_uuid:
+                db.assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri)
                 self.send_json_msg('tag_assign_success', {
-                    'playlist_id': playlist_id
+                    'playlist_uri': playlist_uri,
+                    'tag_uuid': tag_uuid,
                 })
             rfid.start_reading()
 

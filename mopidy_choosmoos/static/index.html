@@ -6,7 +6,17 @@
         <div>
             <table id="playlist-table"></table>
         </div>
-        <script src="/choosmoos/jquery.min.js"></script>
+
+        <script id="row-template" type="text/x-dot-template">
+            <tr data-playlist-uri="{{=it.playlistUri}}"({{?it.tagUuid}}} data-tag-uuid="{{=it.tagUuid}}"{{?}}>
+                <td>{{=it.playlistUri}}}</td>
+                <td>{{it.playlistName}}</td>
+                <td class="tag-uuid">({{?it.tagUuid}}}{{=it.tagUuid}}{{??}}(not assigned){{?}}</td>
+                <td><button>Assign</button></td>
+            </tr>
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/dot/1.1.2/doT.min.js" integrity="sha256-XEpvFiod8Oc0Md8Bfv4/D5joMS7TEhzg6xKvW50P8Sc=" crossorigin="anonymous"></script>
         <script src="/choosmoos/app.js"></script>
     </body>
 </html>

@@ -41,4 +41,4 @@ class SpotifyPlaylist(object):
 
     def get_all_playlists(self):
         response = self._make_request(_ALL_PLAYLISTS_URL)
-        return [dict(id=item["id"], name=item["name"]) for item in response["items"]]
+        return [dict(uri=item["id"], name=item["name"]) for item in response["items"]]
