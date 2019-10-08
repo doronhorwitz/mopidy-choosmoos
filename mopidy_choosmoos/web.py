@@ -27,7 +27,7 @@ class HttpHandler(tornado.web.RequestHandler):
         if slug == 'all-playlists':
             all_spotify_playlists = spotify_playlist.get_all_playlists()
             all_db_playlists = db.get_all_playlists()
-            db_playlist_lookup = {db_playlist.uri.split(':')[-1]: str(db_playlist.tag_uuid)
+            db_playlist_lookup = {db_playlist.playlist_uri.split(':')[-1]: str(db_playlist.tag_uuid)
                                   for db_playlist in all_db_playlists}
 
             playlists = [

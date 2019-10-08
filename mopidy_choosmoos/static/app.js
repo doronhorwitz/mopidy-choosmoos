@@ -35,14 +35,14 @@
     }
 
     function cacheJqueryObjects() {
-        $playlistTable = $('#playlist-table');
+        $playlistTable = $('#playlist-table tbody');
         $websocketStatus = $('#websocket-status');
         rowTemplateFunc = doT.template($('#row-template').text());
     }
 
     function getAllPlaylists() {
         return $.get(getCurrentProtocol() + "://" + getCurrentHost() + '/choosmoos/http/all-playlists').then(function(data){
-            $.each(data.playlists, function(_, playlist){
+            $.each(data.playlists, function(_, playlist) {
                 $playlistTable.append(rowTemplateFunc({
                     playlistName: playlist.name,
                     tagUuid: playlist.tag_uuid,
@@ -52,11 +52,11 @@
             $playlistTable.find('button').on('click', function(e){
                 e.preventDefault();
                 var $button = $(this),
-                    playListUri = $button.data('playlist-uri');
+                    playlistUri = $button.closest('tr').attr('data-playlist-uri')
 
                 $button.text("Requested...");
                 wsSend('assign_tag_to_playlist', {
-                    'playlist_uri': playListUri
+                    'playlist_uri': playlistUri
                 });
             });
         });

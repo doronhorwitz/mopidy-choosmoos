@@ -24,5 +24,5 @@ class RFID(object):
         self._pn7150.start_reading()
 
     @staticmethod
-    def _load_playlist(playlist_id):
-        core.load_playlist(playlist_id)
+    def _load_playlist(tag_uuid):
+        core.load_playlist(tag_uuid)

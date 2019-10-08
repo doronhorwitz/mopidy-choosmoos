@@ -4,7 +4,7 @@ from operator import itemgetter
 
 
 _TOKEN_URL = 'https://auth.mopidy.com/spotify/token'
-_PLAYLIST_URL = 'https://api.spotify.com/v1/playlists/{playlist_id}'
+_PLAYLIST_URL = 'https://api.spotify.com/v1/playlists/{playlist_uri}'
 _ALL_PLAYLISTS_URL = 'https://api.spotify.com/v1/me/playlists'
 
 
@@ -35,8 +35,8 @@ class SpotifyPlaylist(object):
         }).json()
 
     def get_tracks(self, playlist_uri):
-        playlist_id = playlist_uri.split(':')[-1]
-        response = self._make_request(_PLAYLIST_URL, playlist_id=playlist_id)
+        playlist_uri = playlist_uri.split(':')[-1]
+        response = self._make_request(_PLAYLIST_URL, playlist_uri=playlist_uri)
         return [track['track']['uri'] for track in response['tracks']['items']]
 
     def get_all_playlists(self):

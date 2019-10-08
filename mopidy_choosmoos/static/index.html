@@ -4,14 +4,23 @@
             Websocket status: <span id="websocket-status">Not Ready</span>
         </div>
         <div>
-            <table id="playlist-table"></table>
+            <table id="playlist-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Spotify URI</th>
+                        <th>Tag UUID</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
 
         <script id="row-template" type="text/x-dot-template">
-            <tr data-playlist-uri="{{=it.playlistUri}}"({{?it.tagUuid}}} data-tag-uuid="{{=it.tagUuid}}"{{?}}>
-                <td>{{=it.playlistUri}}}</td>
-                <td>{{it.playlistName}}</td>
-                <td class="tag-uuid">({{?it.tagUuid}}}{{=it.tagUuid}}{{??}}(not assigned){{?}}</td>
+            <tr data-playlist-uri="{{=it.playlistUri}}"{{?it.tagUuid}}} data-tag-uuid="{{=it.tagUuid}}"{{?}}>
+                <td>{{=it.playlistName}}</td>
+                <td>{{=it.playlistUri}}</td>
+                <td class="tag-uuid">{{?it.tagUuid}}{{=it.tagUuid}}{{??}}(not assigned){{?}}</td>
                 <td><button>Assign</button></td>
             </tr>
         </script>

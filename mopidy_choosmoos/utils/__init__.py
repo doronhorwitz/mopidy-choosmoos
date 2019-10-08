@@ -16,8 +16,8 @@ def validate_uuid4(uuid_string):
 
     try:
         val = UUID(uuid_string, version=4)
-    except ValueError:
-        # If it's a value error, then the string
+    except (ValueError, TypeError):
+        # If it's a ValueError or TypeError, then the string
         # is not a valid hex code for a UUID.
         return False
 

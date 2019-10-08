@@ -55,8 +55,8 @@ class Core(object):
         else:
             self._core.playback.play()
 
-    def load_playlist(self, playlist_id):
-        playlist = Playlist.select().where(Playlist.id == playlist_id).first()
+    def load_playlist(self, tag_uuid):
+        playlist = Playlist.select().where(Playlist.tag_uuid == tag_uuid).first()
 
         if not playlist:
             return
@@ -65,7 +65,7 @@ class Core(object):
         self._core.tracklist.clear()
 
         # get the list of tracks in the playlist
-        track_uris = spotify_playlist.get_tracks(playlist.uri)
+        track_uris = spotify_playlist.get_tracks(playlist.playlist_uri)
 
         # if there are any tracks
         if track_uris:
