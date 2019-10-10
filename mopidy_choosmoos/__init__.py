@@ -8,6 +8,7 @@ from mopidy import config, ext
 from .db import db
 from .frontend import ChoosMoosFrontend
 from .web import choosmoos_web_factory
+from .buttons import BUTTON_NAMES
 
 
 __version__ = '0.1.0'
@@ -27,7 +28,7 @@ class Extension(ext.Extension):
 
     def get_config_schema(self):
         schema = super(Extension, self).get_config_schema()
-        for pin_name in ['next', 'previous', 'volume_up', 'volume_down', 'play_pause']:
+        for pin_name in BUTTON_NAMES:
             schema['{}_pin_number'.format(pin_name)] = config.Integer(optional=True)
         schema['nfc_demo_app_location'] = config.String(optional=True)
         return schema
