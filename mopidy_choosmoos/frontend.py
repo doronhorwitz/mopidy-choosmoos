@@ -2,10 +2,11 @@ import logging
 import pykka
 from mopidy import core as mopidy_core
 
-from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global
+from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global, onboard_leds
 from .interface.buttons import Buttons
 from .interface.core import Core
 from .interface.db import db
+from .interface.onboard_leds import OnBoardLEDs
 from .interface.rfid import RFID
 from .interface.spotify_playlist import SpotifyPlaylist
 
@@ -41,6 +42,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
             client_secret=config['spotify']['client_secret']
         ))
 
+        # on-board LEDs
+        set_global(onboard_leds, OnBoardLEDs())
+
     def on_start(self):
         logger.info('Starting ChoosMoos')
         rfid.start_reading()
@@ -50,3 +54,4 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
         logger.info('Stopping ChoosMoos')
         rfid.stop_reading()
         db.close()
+        onboard_leds.deactivate()

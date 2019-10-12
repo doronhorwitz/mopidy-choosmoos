@@ -1,4 +1,4 @@
-from ..globals import core
+from ..globals import core, onboard_leds
 from ..utils.pn7150 import PN7150
 
 _DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
@@ -25,4 +25,9 @@ class RFID(object):
 
     @staticmethod
     def _load_playlist(tag_uuid):
+        # the response time of the on-board LEDs is slow enough that calling on() and then off() immediately after shows
+        # a nice visible blink
+        onboard_leds.on("act")
+        onboard_leds.off("act")
+
         core.load_playlist(tag_uuid)
