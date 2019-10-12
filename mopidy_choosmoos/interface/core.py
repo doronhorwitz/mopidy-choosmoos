@@ -37,6 +37,7 @@ class Core(object):
         self._volume_before_muted = None
         self._current_track_number = None
         self._number_of_tracks = None
+        self._current_track_length = None
 
     def _change_volume(self, operation):
         current_volume = self._core.playback.volume.get()
@@ -67,6 +68,7 @@ class Core(object):
         new_track_number = operation(self._current_track_number, 1)
         if 1 <= new_track_number <= self._number_of_tracks:
             self._current_track_number = new_track_number
+            self._current_track_length = self._core.playback.get_current_track().get().length
             core_function()
 
     def next(self):
@@ -74,6 +76,18 @@ class Core(object):
 
     def previous(self):
         self._change_track(sub, self._core.playback.previous)
+
+    def _set_time_position(self, operation):
+        current_time_position = self._core.playback.get_time_position().get()
+        new_time_position = operation(current_time_position, 5000)
+        if 0 < new_time_position < self._current_track_length:
+            self._core.playback.seek(new_time_position)
+
+    def seek_forward(self):
+        self._set_time_position(add)
+
+    def seek_backward(self):
+        self._set_time_position(sub)
 
     def play_pause(self):
         if self._core.playback.state.get() == core.PlaybackState.PLAYING:
