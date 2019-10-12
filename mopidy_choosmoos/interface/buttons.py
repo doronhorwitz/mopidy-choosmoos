@@ -1,7 +1,7 @@
 import logging
 from gpiozero import Button
 
-from ..globals import core
+from ..globals import core, onboard_leds
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +39,20 @@ class Buttons(object):
             pin_number = getattr(self, button_attr_name)
             if pin_number is not None:
                 button = Button(_BUTTON_TO_BCM_LOOKUP[pin_number])
-                button.when_pressed = getattr(self, '_{}'.format(button_name))
+                button.when_pressed = self._led_feedback_wrapper(getattr(self, '_{}'.format(button_name)))
                 setattr(self, button_attr_name, button)
 
         # To mute, the "volume down" button is held
         if self._volume_down_button:
             self._volume_down_button.when_held = self._mute
+
+    @staticmethod
+    def _led_feedback_wrapper(function):
+        def wrapper():
+            onboard_leds.on('act')
+            onboard_leds.off('act')
+            function()
+        return wrapper
 
     @staticmethod
     def _next():

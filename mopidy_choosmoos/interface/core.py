@@ -1,6 +1,7 @@
 import traceback
 import types
 from mopidy import core
+from operator import add, sub
 
 from .db import Playlist
 from ..globals import spotify_playlist
@@ -33,21 +34,46 @@ class Core(object):
 
     def __init__(self, core_):
         self._core = core_
+        self._volume_before_muted = None
+        self._current_track_number = None
+        self._number_of_tracks = None
+
+    def _change_volume(self, operation):
+        current_volume = self._core.playback.volume.get()
+        new_volume = operation(current_volume, 5)
+        if new_volume > 100:
+            new_volume = 100
+        elif new_volume < 0:
+            new_volume = 0
+        if new_volume != current_volume:
+            self._core.playback.volume = new_volume
 
     def volume_up(self):
-        self._core.playback.volume = self._core.playback.volume.get() + 5
+        if self._volume_before_muted is None:
+            self._change_volume(add)
+        else:
+            self._core.playback.volume = self._volume_before_muted
+            self._volume_before_muted = None
 
     def volume_down(self):
-        self._core.playback.volume = self._core.playback.volume.get() - 5
+        if self._volume_before_muted is None:
+            self._change_volume(sub)
 
     def mute(self):
+        self._volume_before_muted = self._core.playback.volume.get()
         self._core.playback.volume = 0
 
+    def _change_track(self, operation, core_function):
+        new_track_number = operation(self._current_track_number, 1)
+        if 1 <= new_track_number <= self._number_of_tracks:
+            self._current_track_number = new_track_number
+            core_function()
+
     def next(self):
-        self._core.playback.next()
+        self._change_track(add, self._core.playback.next)
 
     def previous(self):
-        self._core.playback.previous()
+        self._change_track(sub, self._core.playback.previous)
 
     def play_pause(self):
         if self._core.playback.state.get() == core.PlaybackState.PLAYING:
@@ -74,7 +100,9 @@ class Core(object):
             self._core.tracklist.add(uri=track_uris[0])
             # start playing
             self._core.playback.play()
+            # load the remainder of the tracks
+            for track_uri in track_uris[1:]:
+                self._core.tracklist.add(uri=track_uri)
 
-        # load the remainder of the tracks
-        for track_uri in track_uris[1:]:
-            self._core.tracklist.add(uri=track_uri)
+            self._number_of_tracks = len(track_uris)
+            self._current_track_number = 1

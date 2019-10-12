@@ -27,7 +27,7 @@ class RFID(object):
     def _load_playlist(tag_uuid):
         # the response time of the on-board LEDs is slow enough that calling on() and then off() immediately after shows
         # a nice visible blink
-        onboard_leds.on("act")
-        onboard_leds.off("act")
+        onboard_leds.on('act')
+        onboard_leds.off('act')
 
         core.load_playlist(tag_uuid)

@@ -78,7 +78,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.send_json_msg('tag_write_ready', {
                 'playlist_uri': playlist_uri
             })
-            onboard_leds.on("pwr")
+            onboard_leds.on('pwr')
             existing_text = rfid.read_once(wait_for_tag_removal=False)
             tag_uuid = None
             if validate_uuid4(existing_text):
@@ -98,7 +98,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     'playlist_uri': playlist_uri,
                     'tag_uuid': tag_uuid,
                 })
-            onboard_leds.off("pwr")
+            onboard_leds.off('pwr')
             rfid.start_reading()
 
     def on_close(self):
