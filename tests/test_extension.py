@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from mopidy_choosmoos import Extension, frontend as frontend_lib
+from  import Extension, frontend as frontend_lib
 
 
 def test_get_default_config():

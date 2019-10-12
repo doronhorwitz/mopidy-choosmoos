@@ -3,7 +3,7 @@ import types
 from mopidy import core
 
 from .db import Playlist
-from .globals import spotify_playlist
+from ..globals import spotify_playlist
 
 
 # https://stackoverflow.com/a/3468410/506770

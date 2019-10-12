@@ -5,10 +5,10 @@ import os
 
 from mopidy import config, ext
 
-from .db import db
 from .frontend import ChoosMoosFrontend
+from .interface.buttons import BUTTON_NAMES
+from .interface.db import db
 from .web import choosmoos_web_factory
-from .buttons import BUTTON_NAMES
 
 
 __version__ = '0.1.0'

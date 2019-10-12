@@ -1,7 +1,7 @@
 import logging
 from gpiozero import Button
 
-from .globals import core
+from ..globals import core
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +29,18 @@ class Buttons(object):
         self._create_buttons()
 
     def _create_buttons(self):
+        """
+        For each _xxx_button attribute, if it has been set to a pin number, then overwrite the attribute with a Button
+        object that connects to that pin number
+        """
+
         for button_name in BUTTON_NAMES:
-            pin_number = getattr(self, '_{}_button'.format(button_name))
+            button_attr_name = '_{}_button'.format(button_name)
+            pin_number = getattr(self, button_attr_name)
             if pin_number is not None:
                 button = Button(_BUTTON_TO_BCM_LOOKUP[pin_number])
                 button.when_pressed = getattr(self, '_{}'.format(button_name))
+                setattr(self, button_attr_name, button)
 
         # To mute, the "volume down" button is held
         if self._volume_down_button:

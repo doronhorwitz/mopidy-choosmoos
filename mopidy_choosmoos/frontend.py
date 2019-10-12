@@ -2,12 +2,12 @@ import logging
 import pykka
 from mopidy import core as mopidy_core
 
-from .buttons import Buttons
-from .core import Core
-from .db import db
 from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global
-from .rfid import RFID
-from .spotify_playlist import SpotifyPlaylist
+from .interface.buttons import Buttons
+from .interface.core import Core
+from .interface.db import db
+from .interface.rfid import RFID
+from .interface.spotify_playlist import SpotifyPlaylist
 
 
 logger = logging.getLogger(__name__)

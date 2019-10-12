@@ -1,5 +1,5 @@
-from .globals import core
-from .utils.pn7150 import PN7150
+from ..globals import core
+from ..utils.pn7150 import PN7150
 
 _DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
 
