@@ -4,10 +4,9 @@ import os
 import tornado.escape
 import tornado.web
 import tornado.websocket
-from uuid import uuid4
 
-from .globals import set_global, reset_global, rfid, db, spotify_playlist, websocket, onboard_leds
-from .utils import validate_uuid4
+from .globals import set_global, rfid, db, spotify_playlist, mopidy_web
+from .interface.mopidy_web import MopidyWeb
 
 
 logger = logging.getLogger(__name__)
@@ -50,13 +49,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self):
-        logger.debug("QueueManager WebSocket opened")
-        set_global(websocket, self)
+        logger.debug("Mopidy-ChoosMoos WebSocket opened")
+        set_global(mopidy_web, MopidyWeb(self))
 
     def send_json_msg(self, action, params=None):
-        data_to_send = {
-            'action': action
-        }
+        data_to_send = {'action': action}
         if params:
             data_to_send['params'] = params
         self.write_message(tornado.escape.json_encode(data_to_send))
@@ -69,43 +66,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         data = tornado.escape.json_decode(message)
         action = data['action']
+
         if action == 'open_websocket':
             self.send_json_msg('acknowledge_open_websocket')
 
         elif action == 'assign_tag_to_playlist':
             playlist_uri = data['params']['playlist_uri']
-            rfid.stop_reading()
-            self.send_json_msg('tag_write_ready', {
-                'playlist_uri': playlist_uri
-            })
-            onboard_leds.on('pwr')
-            existing_text = rfid.read_once(wait_for_tag_removal=False)
-            tag_uuid = None
-            if validate_uuid4(existing_text):
-                tag_uuid = existing_text
-            else:
-                new_uuid = str(uuid4())
-                write_success = rfid.write(new_uuid, wait_for_tag_removal=False)
-                if write_success:
-                    tag_uuid = new_uuid
-                else:
-                    self.send_json_msg('tag_assign_failure', {
-                        'playlist_uri': playlist_uri
-                    })
-            if tag_uuid:
-                db.assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri)
-                self.send_json_msg('tag_assign_success', {
-                    'playlist_uri': playlist_uri,
-                    'tag_uuid': tag_uuid,
-                })
-            onboard_leds.off('pwr')
-            rfid.start_reading()
+            rfid.assign_tag_to_playlist(playlist_uri)
 
     def on_close(self):
-        logger.debug("QueueManager WebSocket closed")
-        reset_global(websocket)
+        logger.debug("Mopidy-ChoosMoos WebSocket closed")
 
 
+# config and core are required when adding an item to the Mopidy registry. But mopidy-choosmoos doesn't use them
 def choosmoos_web_factory(config, core):
     path = os.path.join(os.path.dirname(__file__), 'static')
 

@@ -1,4 +1,7 @@
-from ..globals import core, onboard_leds
+from uuid import uuid4
+
+from ..globals import mopidy_core, db, onboard_leds, mopidy_web
+from ..utils import validate_uuid4
 from ..utils.pn7150 import PN7150
 
 _DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
@@ -11,11 +14,32 @@ class RFID(object):
             PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150(_DEFAULT_NFC_DEMO_APP_LOCATION))
         self._pn7150.when_tag_read = self._load_playlist
 
-    def write(self, text, wait_for_tag_removal=True):
-        return self._pn7150.write(text, wait_for_tag_removal=wait_for_tag_removal)
+    def _initialize_tag(self):
+        existing_text = self._pn7150.read_once(wait_for_tag_removal=False)
 
-    def read_once(self, wait_for_tag_removal=True):
-        return self._pn7150.read_once(wait_for_tag_removal=wait_for_tag_removal)
+        if validate_uuid4(existing_text):
+            return existing_text
+        else:
+            new_uuid = str(uuid4())
+            write_success = self._pn7150.write(new_uuid, wait_for_tag_removal=False)
+            return new_uuid if write_success else None
+
+    def assign_tag_to_playlist(self, playlist_uri):
+        self.stop_reading()
+
+        mopidy_web.send_tag_write_ready(playlist_uri)
+        onboard_leds.on('pwr')
+        tag_uuid = self._initialize_tag()
+
+        if tag_uuid:
+            db.assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri)
+            mopidy_web.send_tag_assign_success(playlist_uri, tag_uuid)
+        else:
+            mopidy_web.send_tag_assign_failure(playlist_uri)
+
+        onboard_leds.off('pwr')
+
+        self.start_reading()
 
     def stop_reading(self):
         self._pn7150.stop_reading()
@@ -25,4 +49,4 @@ class RFID(object):
 
     @staticmethod
     def _load_playlist(tag_uuid):
-        core.load_playlist(tag_uuid)
+        mopidy_core.load_playlist(tag_uuid)

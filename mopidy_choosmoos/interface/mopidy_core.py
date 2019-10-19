@@ -9,13 +9,13 @@ from ..globals import spotify_playlist, onboard_leds
 
 # https://stackoverflow.com/a/3468410/506770
 # Wraps all functions in a try-except claus to print the traceback if there is one.
-class CoreTracebackMeta(type):
+class MopidyCoreTracebackMeta(type):
     def __new__(mcs, name, bases, attrs):
         for attr_name, attr_value in attrs.iteritems():
             if isinstance(attr_value, types.FunctionType):
                 attrs[attr_name] = mcs.decorator(attr_value)
 
-        return super(CoreTracebackMeta, mcs).__new__(mcs, name, bases, attrs)
+        return super(MopidyCoreTracebackMeta, mcs).__new__(mcs, name, bases, attrs)
 
     @classmethod
     def decorator(mcs, func):
@@ -29,8 +29,8 @@ class CoreTracebackMeta(type):
         return wrapper
 
 
-class Core(object):
-    __metaclass__ = CoreTracebackMeta
+class MopidyCore(object):
+    __metaclass__ = MopidyCoreTracebackMeta
 
     def __init__(self, core_):
         self._core = core_

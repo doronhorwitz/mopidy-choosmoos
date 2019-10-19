@@ -1,7 +1,7 @@
 import logging
 from gpiozero import Button
 
-from ..globals import core, onboard_leds, sound
+from ..globals import mopidy_core, onboard_leds, sound
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +57,11 @@ class Buttons(object):
 
     @staticmethod
     def _next():
-        core.next()
+        mopidy_core.next()
 
     @staticmethod
     def _previous():
-        core.previous()
+        mopidy_core.previous()
 
     @staticmethod
     def _volume_up():
@@ -73,7 +73,7 @@ class Buttons(object):
 
     @staticmethod
     def _play_pause():
-        core.play_pause()
+        mopidy_core.play_pause()
 
     @staticmethod
     def _mute():
