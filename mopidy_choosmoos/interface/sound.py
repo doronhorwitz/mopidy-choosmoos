@@ -14,8 +14,8 @@ class Sound(object):
 
     def _init_volume(self):
         old_volumes = self._mixer.getvolume()
-        # use floor_to_base_int to round down to a multiple of 5
-        min_volume = floor_to_base_int(min(old_volumes), 5)
+        # use floor_to_base_int to round down to a multiple of _VOLUME_DELTA
+        min_volume = floor_to_base_int(min(old_volumes), self._VOLUME_DELTA)
         self._mixer.setvolume(min_volume)
         return old_volumes, min_volume
 
