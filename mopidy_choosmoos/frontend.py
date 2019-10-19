@@ -2,12 +2,22 @@ import logging
 import pykka
 from mopidy import core as mopidy_core
 
-from .globals import set_global, rfid, core as core_global, buttons, spotify_playlist, db as db_global, onboard_leds
+from .globals import (
+    set_global,
+    rfid,
+    buttons,
+    spotify_playlist,
+    onboard_leds,
+    sound,
+    db as db_global,
+    core as core_global,
+)
 from .interface.buttons import Buttons
 from .interface.core import Core
 from .interface.db import db
 from .interface.onboard_leds import OnBoardLEDs
 from .interface.rfid import RFID
+from .interface.sound import Sound
 from .interface.spotify_playlist import SpotifyPlaylist
 
 
@@ -45,13 +55,20 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
         # on-board LEDs
         set_global(onboard_leds, OnBoardLEDs())
 
+        # sound
+        set_global(sound, Sound())
+
     def on_start(self):
         logger.info('Starting ChoosMoos')
         rfid.start_reading()
         db.init()
+        # we set Mopidy's Core volume to max because we will be using alsaaudio to do volume control via the ALSA
+        # interface. It's possible that Mopidy does this every time it starts up, but added in here for completeness
+        core_global.volume_to_max()
 
     def on_stop(self):
         logger.info('Stopping ChoosMoos')
         rfid.stop_reading()
         db.close()
         onboard_leds.deactivate()
+        sound.reset_volume()

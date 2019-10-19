@@ -1,9 +1,10 @@
 import logging
 from gpiozero import Button
 
-from ..globals import core, onboard_leds
+from ..globals import core, onboard_leds, sound
 
 logger = logging.getLogger(__name__)
+
 
 BUTTON_NAMES = ('next', 'previous', 'volume_up', 'volume_down', 'play_pause')
 _BUTTON_TO_BCM_LOOKUP = {
@@ -64,11 +65,11 @@ class Buttons(object):
 
     @staticmethod
     def _volume_up():
-        core.volume_up()
+        sound.volume_up()
 
     @staticmethod
     def _volume_down():
-        core.volume_down()
+        sound.volume_down()
 
     @staticmethod
     def _play_pause():
@@ -76,4 +77,4 @@ class Buttons(object):
 
     @staticmethod
     def _mute():
-        core.mute()
+        sound.mute()

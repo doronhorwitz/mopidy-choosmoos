@@ -30,6 +30,7 @@ setup(
         'Pykka >= 1.1',
         'setuptools',
         'tornado',
+        'pyalsaaudio',
     ],
     entry_points={
         'mopidy.ext': [

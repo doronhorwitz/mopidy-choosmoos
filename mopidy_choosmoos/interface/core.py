@@ -39,30 +39,8 @@ class Core(object):
         self._number_of_tracks = None
         self._current_track_length = None
 
-    def _change_volume(self, operation):
-        current_volume = self._core.playback.volume.get()
-        new_volume = operation(current_volume, 5)
-        if new_volume > 100:
-            new_volume = 100
-        elif new_volume < 0:
-            new_volume = 0
-        if new_volume != current_volume:
-            self._core.playback.volume = new_volume
-
-    def volume_up(self):
-        if self._volume_before_muted is None:
-            self._change_volume(add)
-        else:
-            self._core.playback.volume = self._volume_before_muted
-            self._volume_before_muted = None
-
-    def volume_down(self):
-        if self._volume_before_muted is None:
-            self._change_volume(sub)
-
-    def mute(self):
-        self._volume_before_muted = self._core.playback.volume.get()
-        self._core.playback.volume = 0
+    def volume_to_max(self):
+        self._core.playback.volume = 100
 
     def _change_track(self, operation, core_function):
         new_track_number = operation(self._current_track_number, 1)
