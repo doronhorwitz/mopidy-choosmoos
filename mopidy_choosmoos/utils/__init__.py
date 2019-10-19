@@ -1,3 +1,4 @@
+from math import floor
 from uuid import UUID
 
 
@@ -27,3 +28,8 @@ def validate_uuid4(uuid_string):
     # valid uuid4. This is bad for validation purposes.
 
     return val.hex == uuid_string.replace('-', '')
+
+
+# https://stackoverflow.com/a/2272174/506770
+def floor_to_base_int(value, base):
+    return int(base * floor(float(value) / base))

@@ -1,6 +1,8 @@
 from operator import add, sub
 from alsaaudio import Mixer
 
+from mopidy_choosmoos.utils import floor_to_base_int
+
 
 class Sound(object):
     _VOLUME_DELTA = 5
@@ -12,7 +14,8 @@ class Sound(object):
 
     def _init_volume(self):
         old_volumes = self._mixer.getvolume()
-        min_volume = min(old_volumes)
+        # use floor_to_base_int to round down to a multiple of 5
+        min_volume = floor_to_base_int(min(old_volumes), 5)
         self._mixer.setvolume(min_volume)
         return old_volumes, min_volume
 

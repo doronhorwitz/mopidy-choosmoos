@@ -4,7 +4,7 @@ from mopidy import core
 from operator import add, sub
 
 from .db import Playlist
-from ..globals import spotify_playlist
+from ..globals import spotify_playlist, onboard_leds
 
 
 # https://stackoverflow.com/a/3468410/506770
@@ -78,6 +78,8 @@ class Core(object):
 
         if not playlist:
             return
+
+        onboard_leds.flash('act')
 
         # clear the playlist
         self._core.tracklist.clear()
