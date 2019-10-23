@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from contextlib import contextmanager
+
 from ..globals import mopidy_core, db, onboard_leds, mopidy_web
 from ..utils import validate_uuid4
 from ..utils.pn7150 import PN7150
@@ -24,22 +26,24 @@ class RFID(object):
             write_success = self._pn7150.write(new_uuid, wait_for_tag_removal=False)
             return new_uuid if write_success else None
 
-    def assign_tag_to_playlist(self, playlist_uri):
+    @contextmanager
+    def _temporarily_stop_reading_and_initialize_tag(self):
         self.stop_reading()
-
-        mopidy_web.send_tag_write_ready(playlist_uri)
         onboard_leds.on('pwr')
-        tag_uuid = self._initialize_tag()
 
-        if tag_uuid:
-            db.assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri)
-            mopidy_web.send_tag_assign_success(playlist_uri, tag_uuid)
-        else:
-            mopidy_web.send_tag_assign_failure(playlist_uri)
+        yield self._initialize_tag()
 
         onboard_leds.off('pwr')
-
         self.start_reading()
+
+    def assign_tag_to_playlist(self, playlist_uri):
+        mopidy_web.send_tag_write_ready(playlist_uri)
+        with self._temporarily_stop_reading_and_initialize_tag() as tag_uuid:
+            if tag_uuid:
+                db.assign_playlist_uri_to_tag_uuid(tag_uuid, playlist_uri)
+                mopidy_web.send_tag_assign_success(playlist_uri, tag_uuid)
+            else:
+                mopidy_web.send_tag_assign_failure(playlist_uri)
 
     def stop_reading(self):
         self._pn7150.stop_reading()
