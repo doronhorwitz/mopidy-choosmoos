@@ -3,7 +3,7 @@ include LICENSE
 include MANIFEST.in
 include README.rst
 include mopidy_choosmoos/ext.conf
-include mopidy_choosmoos/static
 include tox.ini
 
 recursive-include tests *.py
+recursive-include mopidy_choosmoos/static *
