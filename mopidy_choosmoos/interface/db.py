@@ -1,7 +1,7 @@
 from peewee import Model, SqliteDatabase, TextField, UUIDField
 
 
-_db = SqliteDatabase('/tmp/choosmoos.db')
+_db = SqliteDatabase('/home/pi/choosmoos.db')
 
 
 class BaseModel(Model):
