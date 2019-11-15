@@ -77,12 +77,23 @@ class PN7150(object):
         self._slave = None
         self.when_tag_read = None
 
-    def _read_thread(self):
-        cmd = _CMD_POLL.format(nfc_demo_app_path=self._nfc_demo_app_path)
-        master, self._slave = pty.openpty()
-        self._proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=self._slave, stderr=self._slave)
+    def _open_process(self, mode, **cmd_arguments):
+        if mode == 'r':
+            cmd_string = _CMD_POLL
+        elif mode == 'w':
+            cmd_string = _CMD_WRITE
+        else:
+            raise PN7150Exception("mode must be 'r' or 'w'")
+
+        cmd = cmd_string.format(nfc_demo_app_path=self._nfc_demo_app_path, **cmd_arguments)
+        master, slave = pty.openpty()
+        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
         stdout = os.fdopen(master)
 
+        return proc, slave, stdout
+
+    def _read_thread(self):
+        self._proc, self._slave, stdout = self._open_process('r')
         self._read_running = True
         while self._read_running:
             try:
@@ -115,10 +126,7 @@ class PN7150(object):
         if self._read_running:
             raise PN7150Exception("cannot read_once while a continuous read is running")
 
-        cmd = _CMD_POLL.format(nfc_demo_app_path=self._nfc_demo_app_path)
-        master, slave = pty.openpty()
-        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
-        stdout = os.fdopen(master)
+        proc, slave, stdout = self._open_process('r')
 
         been_read = False
         been_removed = not wait_for_tag_removal
@@ -141,10 +149,7 @@ class PN7150(object):
         return text
 
     def _write(self, new_text, wait_for_tag_removal=True):
-        cmd = _CMD_WRITE.format(nfc_demo_app_path=self._nfc_demo_app_path, new_text=new_text)
-        master, slave = pty.openpty()
-        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
-        stdout = os.fdopen(master)
+        proc, slave, stdout = self._open_process('w', new_text=new_text)
 
         been_written = False
         been_checked = False
