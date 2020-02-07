@@ -11,7 +11,7 @@ from ..globals import spotify_playlist, onboard_leds
 # Wraps all functions in a try-except claus to print the traceback if there is one.
 class MopidyCoreTracebackMeta(type):
     def __new__(mcs, name, bases, attrs):
-        for attr_name, attr_value in attrs.iteritems():
+        for attr_name, attr_value in attrs.items():
             if isinstance(attr_value, types.FunctionType):
                 attrs[attr_name] = mcs.decorator(attr_value)
 
@@ -29,7 +29,7 @@ class MopidyCoreTracebackMeta(type):
         return wrapper
 
 
-class MopidyCore(object):
+class MopidyCore:
     __metaclass__ = MopidyCoreTracebackMeta
 
     def __init__(self, core_):

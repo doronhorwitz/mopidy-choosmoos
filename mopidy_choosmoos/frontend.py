@@ -40,7 +40,7 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
         set_global(mopidy_core_global, MopidyCore(core))
 
         # buttons
-        set_global(buttons, Buttons(**{key: value for key, value in config['choosmoos'].iteritems()
+        set_global(buttons, Buttons(**{key: value for key, value in config['choosmoos'].items()
                                        if key.endswith('pin_number')}))
 
         # rfid

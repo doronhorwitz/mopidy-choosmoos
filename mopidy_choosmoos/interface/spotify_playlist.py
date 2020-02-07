@@ -8,7 +8,7 @@ _PLAYLIST_URL = 'https://api.spotify.com/v1/playlists/{playlist_uri}'
 _ALL_PLAYLISTS_URL = 'https://api.spotify.com/v1/me/playlists'
 
 
-class SpotifyPlaylist(object):
+class SpotifyPlaylist:
 
     def __init__(self, client_id, client_secret):
         self._client_id = client_id

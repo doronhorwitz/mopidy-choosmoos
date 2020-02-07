@@ -1,4 +1,4 @@
-class _Proxy(object):
+class _Proxy:
     def __init__(self, proxied_object_name):
         self.proxied_object_name = proxied_object_name
 

@@ -5,7 +5,7 @@ _db = SqliteDatabase('/home/pi/choosmoos.db')
 
 
 class BaseModel(Model):
-    class Meta(object):
+    class Meta:
         database = _db
 
 
@@ -13,11 +13,11 @@ class Playlist(BaseModel):
     tag_uuid = UUIDField(primary_key=True)
     playlist_uri = TextField()
 
-    class Meta(object):
+    class Meta:
         table_name = 'playlists'
 
 
-class _DbWrapper(object):
+class _DbWrapper:
     @staticmethod
     def init():
         _db.create_tables([Playlist])

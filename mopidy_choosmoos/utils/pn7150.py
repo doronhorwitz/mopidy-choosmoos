@@ -39,7 +39,7 @@ class PN7150Exception(Exception):
     pass
 
 
-class PN7150(object):
+class PN7150:
     """
     Can use this class as follows:
 

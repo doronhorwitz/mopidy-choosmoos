@@ -1,7 +1,7 @@
 import os
 
 
-class _OnBoardLED(object):
+class _OnBoardLED:
     # Activate:
     # $ echo none | sudo tee /sys/class/leds/led0/trigger >> /dev/null
     # $ echo gpio | sudo tee /sys/class/leds/led1/trigger >> /dev/null
@@ -39,6 +39,12 @@ class _OnBoardLED(object):
 
     def off(self):
         self._run_command(0, self._LED_NUMBER, "brightness")
+
+    def flash(self):
+        # the response time of the on-board LEDs is slow enough that calling on() and then off() immediately after shows
+        # a nice visible blink
+        self.on()
+        self.off()
 
     @classmethod
     def _run_command(cls, content, led_number, type_):

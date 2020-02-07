@@ -1,4 +1,4 @@
-class MopidyWeb(object):
+class MopidyWeb:
     def __init__(self, websocket_handler):
         self._websocket_handler = websocket_handler
 

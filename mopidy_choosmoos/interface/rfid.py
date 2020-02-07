@@ -9,7 +9,7 @@ from ..utils.pn7150 import PN7150
 _DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
 
 
-class RFID(object):
+class RFID:
 
     def __init__(self, nfc_demo_app_location=None):
         self._pn7150 = (

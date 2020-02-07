@@ -17,7 +17,7 @@ _BUTTON_TO_BCM_LOOKUP = {
 }
 
 
-class Buttons(object):
+class Buttons:
 
     def __init__(self, next_pin_number=None, previous_pin_number=None, volume_up_pin_number=None,
                  volume_down_pin_number=None, play_pause_pin_number=None,):

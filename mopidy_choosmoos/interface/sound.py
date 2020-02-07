@@ -4,7 +4,7 @@ from alsaaudio import Mixer
 from mopidy_choosmoos.utils import floor_to_base_int
 
 
-class Sound(object):
+class Sound:
     _VOLUME_DELTA = 5
 
     def __init__(self):
