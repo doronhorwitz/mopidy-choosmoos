@@ -68,7 +68,7 @@ class MopidyCore:
         self._set_time_position(sub)
 
     def play_pause(self):
-        if self._core.playback.state.get() == core.PlaybackState.PLAYING:
+        if self._core.playback.get_state().get() == core.PlaybackState.PLAYING:
             self._core.playback.pause()
         else:
             self._core.playback.play()
@@ -91,12 +91,11 @@ class MopidyCore:
         if track_uris:
             # add just the first track - mopidy seems to handle better if you just load one track into the
             # playlist and play it. And only afterwards load the remainder of the tracks
-            self._core.tracklist.add(uri=track_uris[0])
+            self._core.tracklist.add(uris=[track_uris[0]])
             # start playing
             self._core.playback.play()
             # load the remainder of the tracks
-            for track_uri in track_uris[1:]:
-                self._core.tracklist.add(uri=track_uri)
+            self._core.tracklist.add(uris=track_uris[1:])
 
             self._number_of_tracks = len(track_uris)
             self._current_track_number = 1

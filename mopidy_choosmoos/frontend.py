@@ -4,6 +4,7 @@ from mopidy import core as mopidy_core
 
 from .globals import (
     set_global,
+    logger,
     rfid,
     buttons,
     spotify_playlist,
@@ -21,9 +22,6 @@ from .interface.sound import Sound
 from .interface.spotify_playlist import SpotifyPlaylist
 
 
-logger = logging.getLogger(__name__)
-
-
 class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
 
     def __init__(self, config, core):
@@ -32,6 +30,9 @@ class ChoosMoosFrontend(pykka.ThreadingActor, mopidy_core.CoreListener):
 
     @staticmethod
     def _set_globals(config, core):
+
+        # logger
+        set_global(logger, logging.getLogger(__name__))
 
         # database
         set_global(db_global, db)

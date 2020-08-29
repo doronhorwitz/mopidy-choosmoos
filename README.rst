@@ -22,6 +22,7 @@ Installation
 
 Install by running::
 
+    sudo apt-get install libasound2-dev
     pip install Mopidy-ChoosMoos
 
 Or, if available, install the Debian/Ubuntu package from `apt.mopidy.com
