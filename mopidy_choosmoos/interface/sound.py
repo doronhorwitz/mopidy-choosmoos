@@ -1,5 +1,9 @@
 from operator import add, sub
-from alsaaudio import Mixer
+
+try:
+    from alsaaudio import Mixer
+except ModuleNotFoundError:
+    pass
 
 from mopidy_choosmoos.utils import floor_to_base_int
 
