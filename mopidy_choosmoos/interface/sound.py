@@ -12,7 +12,7 @@ class Sound:
     _VOLUME_DELTA = 5
 
     def __init__(self):
-        self._mixer = Mixer('PCM')
+        self._mixer = Mixer("PCM")
         self._volume_before_muted = None
         self._old_volumes, self._current_volume = self._init_volume()
 

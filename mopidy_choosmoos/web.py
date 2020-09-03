@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class HttpHandler(tornado.web.RequestHandler):
-
     def data_received(self, chunk):
         pass
 
@@ -23,17 +22,22 @@ class HttpHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, slug=None):
 
-        if slug == 'all-playlists':
+        if slug == "all-playlists":
             all_spotify_playlists = spotify_playlist.get_all_playlists()
             all_db_playlists = db.get_all_playlists()
-            db_playlist_lookup = {db_playlist.playlist_uri.split(':')[-1]: str(db_playlist.tag_uuid)
-                                  for db_playlist in all_db_playlists}
+            db_playlist_lookup = {
+                db_playlist.playlist_uri.split(":")[-1]: str(db_playlist.tag_uuid)
+                for db_playlist in all_db_playlists
+            }
 
             playlists = [
-                dict(name=spotify_playlist_["name"],
-                     playlist_uri=spotify_playlist_["uri"],
-                     tag_uuid=db_playlist_lookup.get(spotify_playlist_["uri"], None))
-                for spotify_playlist_ in all_spotify_playlists]
+                {
+                    "name": spotify_playlist_["name"],
+                    "playlist_uri": spotify_playlist_["uri"],
+                    "tag_uuid": db_playlist_lookup.get(spotify_playlist_["uri"], None),
+                }
+                for spotify_playlist_ in all_spotify_playlists
+            ]
 
             self.write(json.dumps({"playlists": playlists}))
 
@@ -41,7 +45,6 @@ class HttpHandler(tornado.web.RequestHandler):
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
-
     def data_received(self, chunk):
         pass
 
@@ -53,9 +56,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         set_global(mopidy_web, MopidyWeb(self))
 
     def send_json_msg(self, action, params=None):
-        data_to_send = {'action': action}
+        data_to_send = {"action": action}
         if params:
-            data_to_send['params'] = params
+            data_to_send["params"] = params
         self.write_message(tornado.escape.json_encode(data_to_send))
 
     def on_message(self, message):
@@ -65,30 +68,27 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         logger.debug("Message received: %s", message)
 
         data = tornado.escape.json_decode(message)
-        action = data['action']
+        action = data["action"]
 
-        if action == 'open_websocket':
-            self.send_json_msg('acknowledge_open_websocket')
+        if action == "open_websocket":
+            self.send_json_msg("acknowledge_open_websocket")
 
-        elif action == 'assign_tag_to_playlist':
-            playlist_uri = data['params']['playlist_uri']
+        elif action == "assign_tag_to_playlist":
+            playlist_uri = data["params"]["playlist_uri"]
             rfid.assign_tag_to_playlist(playlist_uri)
 
     def on_close(self):
         logger.debug("Mopidy-ChoosMoos WebSocket closed")
 
 
-# config and core are required when adding an item to the Mopidy registry. But mopidy-choosmoos doesn't use them
+# config and core are required when adding an item to the Mopidy registry. But
+# mopidy-choosmoos doesn"t use them
 def choosmoos_web_factory(config, core):
-    path = os.path.join(os.path.dirname(__file__), 'static')
+    path = os.path.join(os.path.dirname(__file__), "static")
 
     return [
-        (r'/ws/?', WebSocketHandler, {}),
-        (r'/http/([^/]*)', HttpHandler, {}),
-        (r'/([^.]*)', tornado.web.StaticFileHandler, {
-            'path': path + '/index.html'
-        }),
-        (r'/(.*)', tornado.web.StaticFileHandler, {
-            'path': path
-        }),
+        (r"/ws/?", WebSocketHandler, {}),
+        (r"/http/([^/]*)", HttpHandler, {}),
+        (r"/([^.]*)", tornado.web.StaticFileHandler, {"path": path + "/index.html"}),
+        (r"/(.*)", tornado.web.StaticFileHandler, {"path": path}),
     ]

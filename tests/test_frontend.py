@@ -12,13 +12,13 @@ from mopidy_choosmoos.web import choosmoos_web_factory
 
 
 dummy_config = {
-    'choosmoos': {
-        'nfc_demo_app_location': None,
-        'next_pin_number': 3,
-        'previous_pin_number': 4,
-        'volume_up_pin_number': 1,
-        'volume_down_pin_number': 2,
-        'play_pause_pin_number': 5,
+    "choosmoos": {
+        "nfc_demo_app_location": None,
+        "next_pin_number": 3,
+        "previous_pin_number": 4,
+        "volume_up_pin_number": 1,
+        "volume_down_pin_number": 2,
+        "play_pause_pin_number": 5,
     }
 }
 
@@ -40,12 +40,17 @@ def test_get_frontend_classes():
 
     ext.setup(registry)
 
-    registry.add.assert_has_calls([
-        call('frontend', frontend_lib.ChoosMoosFrontend),
-        call('http:app', {
-            'name': 'choosmoos',
-            'factory': choosmoos_web_factory,
-        })
-    ])
+    registry.add.assert_has_calls(
+        [
+            call("frontend", frontend_lib.ChoosMoosFrontend),
+            call(
+                "http:app",
+                {
+                    "name": "choosmoos",
+                    "factory": choosmoos_web_factory,
+                },
+            ),
+        ]
+    )
 
     stop_mopidy_core()

@@ -18,14 +18,18 @@ class _OnBoardLED:
     # $ echo 1 | sudo tee /sys/class/leds/led0/brightness >> /dev/null
     # $ echo 1 | sudo tee /sys/class/leds/led1/brightness >> /dev/null
 
-    # https://gpiozero.readthedocs.io/en/stable/recipes_advanced.html#controlling-the-pi-s-own-leds
-    # https://raspberrypi.stackexchange.com/questions/70013/raspberry-pi-3-model-b-system-leds
+    # https://gpiozero.readthedocs.io/en/stable/recipes_advanced.html#controlli
+    # ng-the-pi-s-own-leds
+    # https://raspberrypi.stackexchange.com/questions/70013/raspberry-pi-3-mode
+    # l-b-system-leds
 
     _LED_NUMBER = None
     _ACTIVATED_CONTENT = None
     _DEACTIVATED_CONTENT = None
 
-    _CMD_FORMAT = 'echo {content} | sudo tee /sys/class/leds/led{led_number}/{type} >> /dev/null'
+    _CMD_FORMAT = (
+        "echo {content} | sudo tee /sys/class/leds/led{led_number}/{type} >> /dev/null"
+    )
 
     def __init__(self):
         self._run_command(self._ACTIVATED_CONTENT, self._LED_NUMBER, "trigger")
@@ -41,14 +45,16 @@ class _OnBoardLED:
         self._run_command(0, self._LED_NUMBER, "brightness")
 
     def flash(self):
-        # the response time of the on-board LEDs is slow enough that calling on() and then off() immediately after shows
-        # a nice visible blink
+        # the response time of the on-board LEDs is slow enough that calling
+        # on() and then off() immediately after shows a nice visible blink
         self.on()
         self.off()
 
     @classmethod
     def _run_command(cls, content, led_number, type_):
-        os.system(cls._CMD_FORMAT.format(content=content, led_number=led_number, type=type_))
+        os.system(
+            cls._CMD_FORMAT.format(content=content, led_number=led_number, type=type_)
+        )
 
 
 class ActOnBoardLED(_OnBoardLED):

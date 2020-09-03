@@ -6,14 +6,16 @@ from ..globals import mopidy_core, db, onboard_leds, mopidy_web
 from ..utils import validate_uuid4
 from ..utils.pn7150 import PN7150
 
-_DEFAULT_NFC_DEMO_APP_LOCATION = '/home/pi/linux_libnfc-nci-master'
+_DEFAULT_NFC_DEMO_APP_LOCATION = "/home/pi/linux_libnfc-nci-master"
 
 
 class RFID:
-
     def __init__(self, nfc_demo_app_location=None):
         self._pn7150 = (
-            PN7150(nfc_demo_app_location) if nfc_demo_app_location else PN7150(_DEFAULT_NFC_DEMO_APP_LOCATION))
+            PN7150(nfc_demo_app_location)
+            if nfc_demo_app_location
+            else PN7150(_DEFAULT_NFC_DEMO_APP_LOCATION)
+        )
         self._pn7150.when_tag_read = self._load_playlist
 
     def _initialize_tag(self):
@@ -29,11 +31,11 @@ class RFID:
     @contextmanager
     def _temporarily_stop_reading_and_initialize_tag(self):
         self.stop_reading()
-        onboard_leds.on('pwr')
+        onboard_leds.on("pwr")
 
         yield self._initialize_tag()
 
-        onboard_leds.off('pwr')
+        onboard_leds.off("pwr")
         self.start_reading()
 
     def assign_tag_to_playlist(self, playlist_uri):

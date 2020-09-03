@@ -1,7 +1,7 @@
 from peewee import Model, SqliteDatabase, TextField, UUIDField
 
 
-_db = SqliteDatabase('/home/pi/choosmoos.db')
+_db = SqliteDatabase("/home/pi/choosmoos.db")
 
 
 class BaseModel(Model):
@@ -14,7 +14,7 @@ class Playlist(BaseModel):
     playlist_uri = TextField()
 
     class Meta:
-        table_name = 'playlists'
+        table_name = "playlists"
 
 
 class _DbWrapper:

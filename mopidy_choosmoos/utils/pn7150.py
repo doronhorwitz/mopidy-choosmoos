@@ -1,21 +1,26 @@
 # https://gist.github.com/doronhorwitz/fc5c4234a9db9ed87c53213d79e63b6c
 
-# https://www.nxp.com/docs/en/application-note/AN11697.pdf explains how to setup a demo of the PN7120/PN7150.
-# With that demo comes an executable called 'nfcDemoApp'. This gist is a proof of concept for how to read from that
+# https://www.nxp.com/docs/en/application-note/AN11697.pdf explains how to
+# setup a demo of the PN7120/PN7150. With that demo comes an executable called
+# "nfcDemoApp". This gist is a proof of concept for how to read from that
 # executable in Python.
 
-# The class (which is called PN7150, even though it also should support PN7120) reads the output from the PN7150 each
-# time a tag is read. It finds the line starting with "Text :" and extracts out the text - which is the text stored
-# by the NFC tag.
-# The reading is done in a separate thread, which calls a callback with the text every time an NFC tag is read.
-# Writing and single synchronous reads are also supported
+# The class (which is called PN7150, even though it also should support PN7120)
+# reads the output from the PN7150 each time a tag is read. It finds the line
+# starting with "Text :" and extracts out the text - which is the text stored
+# by the NFC tag. The reading is done in a separate thread, which calls a
+# callback with the text every time an NFC tag is read. Writing and single
+# synchronous reads are also supported
 
 # Lots of inspiration and learning from various places including:
-# https://github.com/NXPNFCLinux/linux_libnfc-nci/issues/49#issuecomment-326301669
+# https://github.com/NXPNFCLinux/linux_libnfc-nci/issues/49#issuecomment-326301
+# 669
 # https://stackoverflow.com/a/4791612
 # https://stackoverflow.com/a/38802275
-# https://repolinux.wordpress.com/2012/10/09/non-blocking-read-from-stdin-in-python/
-# https://stackoverflow.com/questions/18225816/indicate-no-more-input-without-closing-pty
+# https://repolinux.wordpress.com/2012/10/09/non-blocking-read-from-stdin-in-py
+# thon/
+# https://stackoverflow.com/questions/18225816/indicate-no-more-input-without-c
+# losing-pty
 
 import os
 import pty
@@ -25,14 +30,14 @@ import threading
 
 
 _MAX_WRITE_RETRIES = 5
-_OUTPUT_TEXT = 'Text :'
-_OUTPUT_TAG_WRITTEN = 'Write Tag OK'
-_OUTPUT_READ_FAILED = 'Read NDEF Content Failed'
-_OUTPUT_TAG_REMOVED = 'NFC Tag Lost'
-_CMD_POLL = '{nfc_demo_app_path} poll'
+_OUTPUT_TEXT = "Text :"
+_OUTPUT_TAG_WRITTEN = "Write Tag OK"
+_OUTPUT_READ_FAILED = "Read NDEF Content Failed"
+_OUTPUT_TAG_REMOVED = "NFC Tag Lost"
+_CMD_POLL = "{nfc_demo_app_path} poll"
 _CMD_WRITE = '{nfc_demo_app_path} write --type=Text -l en -r "{new_text}"'
-_NFC_DEMO_APP_NAME = 'nfcDemoApp'
-_NFC_DEMO_APP_DEFAULT_LOCATION = '/usr/sbin'
+_NFC_DEMO_APP_NAME = "nfcDemoApp"
+_NFC_DEMO_APP_DEFAULT_LOCATION = "/usr/sbin"
 
 
 class PN7150Exception(Exception):
@@ -78,22 +83,26 @@ class PN7150:
         self.when_tag_read = None
 
     def _open_process(self, mode, **cmd_arguments):
-        if mode == 'r':
+        if mode == "r":
             cmd_string = _CMD_POLL
-        elif mode == 'w':
+        elif mode == "w":
             cmd_string = _CMD_WRITE
         else:
             raise PN7150Exception("mode must be 'r' or 'w'")
 
-        cmd = cmd_string.format(nfc_demo_app_path=self._nfc_demo_app_path, **cmd_arguments)
+        cmd = cmd_string.format(
+            nfc_demo_app_path=self._nfc_demo_app_path, **cmd_arguments
+        )
         master, slave = pty.openpty()
-        proc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave)
+        proc = subprocess.Popen(
+            shlex.split(cmd), stdin=subprocess.PIPE, stdout=slave, stderr=slave
+        )
         stdout = os.fdopen(master)
 
         return proc, slave, stdout
 
     def _read_thread(self):
-        self._proc, self._slave, stdout = self._open_process('r')
+        self._proc, self._slave, stdout = self._open_process("r")
         self._read_running = True
         while self._read_running:
             try:
@@ -101,10 +110,10 @@ class PN7150:
                 if _OUTPUT_TEXT in line:
                     first = line.find("'")
                     last = line.rfind("'")
-                    text = line[first + 1:last]
+                    text = line[first + 1 : last]
                     if self.when_tag_read:
                         self.when_tag_read(text)
-            except (IOError, OSError):
+            except OSError:
                 pass
 
     @property
@@ -126,7 +135,7 @@ class PN7150:
         if self._read_running:
             raise PN7150Exception("cannot read_once while a continuous read is running")
 
-        proc, slave, stdout = self._open_process('r')
+        proc, slave, stdout = self._open_process("r")
 
         been_read = False
         been_removed = not wait_for_tag_removal
@@ -136,7 +145,7 @@ class PN7150:
             if _OUTPUT_TEXT in line:
                 first = line.find("'")
                 last = line.rfind("'")
-                text = line[first + 1:last]
+                text = line[first + 1 : last]
                 been_read = True
             elif _OUTPUT_READ_FAILED in line:
                 been_read = True
@@ -149,7 +158,7 @@ class PN7150:
         return text
 
     def _write(self, new_text, wait_for_tag_removal=True):
-        proc, slave, stdout = self._open_process('w', new_text=new_text)
+        proc, slave, stdout = self._open_process("w", new_text=new_text)
 
         been_written = False
         been_checked = False
@@ -162,7 +171,7 @@ class PN7150:
             elif been_written and _OUTPUT_TEXT in line:
                 first = line.find("'")
                 last = line.rfind("'")
-                checked_text = line[first + 1:last]
+                checked_text = line[first + 1 : last]
                 been_checked = True
             elif _OUTPUT_TAG_REMOVED in line:
                 been_removed = True
@@ -180,7 +189,9 @@ class PN7150:
         if existing_text != new_text:
             count = 0
             while not success and count < _MAX_WRITE_RETRIES:
-                success = self._write(new_text, wait_for_tag_removal=wait_for_tag_removal)
+                success = self._write(
+                    new_text, wait_for_tag_removal=wait_for_tag_removal
+                )
             return success
         else:
             success = True

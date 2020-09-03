@@ -1,37 +1,10 @@
-import traceback
-import types
 from mopidy import core
 from operator import add, sub
-
 from .db import Playlist
 from ..globals import spotify_playlist, onboard_leds
 
 
-# https://stackoverflow.com/a/3468410/506770
-# Wraps all functions in a try-except claus to print the traceback if there is one.
-class MopidyCoreTracebackMeta(type):
-    def __new__(mcs, name, bases, attrs):
-        for attr_name, attr_value in attrs.items():
-            if isinstance(attr_value, types.FunctionType):
-                attrs[attr_name] = mcs.decorator(attr_value)
-
-        return super(MopidyCoreTracebackMeta, mcs).__new__(mcs, name, bases, attrs)
-
-    @classmethod
-    def decorator(mcs, func):
-        def wrapper(*args, **kwargs):
-            try:
-                result = func(*args, **kwargs)
-            except:
-                traceback.print_exc()
-                result = None
-            return result
-        return wrapper
-
-
 class MopidyCore:
-    __metaclass__ = MopidyCoreTracebackMeta
-
     def __init__(self, core_):
         self._core = core_
         self._volume_before_muted = None
@@ -46,7 +19,9 @@ class MopidyCore:
         new_track_number = operation(self._current_track_number, 1)
         if 1 <= new_track_number <= self._number_of_tracks:
             self._current_track_number = new_track_number
-            self._current_track_length = self._core.playback.get_current_track().get().length
+            self._current_track_length = (
+                self._core.playback.get_current_track().get().length
+            )
             core_function()
 
     def next(self):
@@ -79,7 +54,7 @@ class MopidyCore:
         if not playlist:
             return
 
-        onboard_leds.flash('act')
+        onboard_leds.flash("act")
 
         # clear the playlist
         self._core.tracklist.clear()
@@ -89,8 +64,9 @@ class MopidyCore:
 
         # if there are any tracks
         if track_uris:
-            # add just the first track - mopidy seems to handle better if you just load one track into the
-            # playlist and play it. And only afterwards load the remainder of the tracks
+            # add just the first track - mopidy seems to handle better if you
+            # just load one track into the playlist and play it. And only
+            # afterwards load the remainder of the tracks
             self._core.tracklist.add(uris=[track_uris[0]])
             # start playing
             self._core.playback.play()

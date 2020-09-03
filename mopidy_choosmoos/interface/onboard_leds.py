@@ -4,8 +4,8 @@ from mopidy_choosmoos.utils.onboard_leds import ActOnBoardLED, PwrOnBoardLED
 class OnBoardLEDs:
     def __init__(self):
         self._onboard_leds = {
-            'act': ActOnBoardLED(),
-            'pwr': PwrOnBoardLED(),
+            "act": ActOnBoardLED(),
+            "pwr": PwrOnBoardLED(),
         }
 
     def deactivate(self):

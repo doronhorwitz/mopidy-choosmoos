@@ -6,7 +6,7 @@ from ..globals import mopidy_core, onboard_leds, sound
 logger = logging.getLogger(__name__)
 
 
-BUTTON_NAMES = ('next', 'previous', 'volume_up', 'volume_down', 'play_pause')
+BUTTON_NAMES = ("next", "previous", "volume_up", "volume_down", "play_pause")
 _BUTTON_TO_BCM_LOOKUP = {
     1: 5,
     2: 6,
@@ -18,9 +18,14 @@ _BUTTON_TO_BCM_LOOKUP = {
 
 
 class Buttons:
-
-    def __init__(self, next_pin_number=None, previous_pin_number=None, volume_up_pin_number=None,
-                 volume_down_pin_number=None, play_pause_pin_number=None,):
+    def __init__(
+        self,
+        next_pin_number=None,
+        previous_pin_number=None,
+        volume_up_pin_number=None,
+        volume_down_pin_number=None,
+        play_pause_pin_number=None,
+    ):
         self._next_button = next_pin_number
         self._previous_button = previous_pin_number
         self._volume_up_button = volume_up_pin_number
@@ -31,16 +36,19 @@ class Buttons:
 
     def _create_buttons(self):
         """
-        For each _xxx_button attribute, if it has been set to a pin number, then overwrite the attribute with a Button
-        object that connects to that pin number
+        For each _xxx_button attribute, if it has been set to a pin number,
+        then overwrite the attribute with a Button object that connects to that
+        pin number
         """
 
         for button_name in BUTTON_NAMES:
-            button_attr_name = '_{}_button'.format(button_name)
+            button_attr_name = "_{}_button".format(button_name)
             pin_number = getattr(self, button_attr_name)
             if pin_number is not None:
                 button = Button(_BUTTON_TO_BCM_LOOKUP[pin_number])
-                button.when_pressed = self._led_feedback_wrapper(getattr(self, '_{}'.format(button_name)))
+                button.when_pressed = self._led_feedback_wrapper(
+                    getattr(self, "_{}".format(button_name))
+                )
                 setattr(self, button_attr_name, button)
 
         # To mute, the "volume down" button is held
@@ -50,9 +58,10 @@ class Buttons:
     @staticmethod
     def _led_feedback_wrapper(function):
         def wrapper():
-            onboard_leds.on('act')
-            onboard_leds.off('act')
+            onboard_leds.on("act")
+            onboard_leds.off("act")
             function()
+
         return wrapper
 
     @staticmethod

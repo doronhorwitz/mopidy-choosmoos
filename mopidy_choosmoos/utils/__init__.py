@@ -27,7 +27,7 @@ def validate_uuid4(uuid_string):
     # the UUID.__init__ will convert it to a
     # valid uuid4. This is bad for validation purposes.
 
-    return val.hex == uuid_string.replace('-', '')
+    return val.hex == uuid_string.replace("-", "")
 
 
 # https://stackoverflow.com/a/2272174/506770
