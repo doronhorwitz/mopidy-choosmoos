@@ -6,27 +6,29 @@ Mopidy-ChoosMoos
     :target: https://pypi.python.org/pypi/Mopidy-ChoosMoos/
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/travis/doronhorwitz/mopidy-choosmoos/master.svg?style=flat
-    :target: https://travis-ci.org/doronhorwitz/mopidy-choosmoos
-    :alt: Travis CI build status
+.. image:: https://img.shields.io/circleci/build/gh/doronhorwitz/mopidy-choosmoos/master.svg?style=flat
+    :target: https://app.circleci.com/pipelines/github/doronhorwitz/mopidy-choosmoos
+    :alt: CircleCI build status
 
-.. image:: https://img.shields.io/coveralls/doronhorwitz/mopidy-choosmoos/master.svg?style=flat
-   :target: https://coveralls.io/r/doronhorwitz/mopidy-choosmoos
+.. image:: https://img.shields.io/codecov/c/github/doronhorwitz/mopidy-choosmoos/master.svg?style=flat
+   :target: https://codecov.io/gh/doronhorwitz/mopidy-choosmoos
    :alt: Test coverage
 
-Mopidy extension to support the ChoosMoos NFC Spotify Music Player
+Mopidy extension to support the ChoosMoos NFC Raspberry PI Spotify Music Player
 
 
 Installation
 ============
 
-Install by running::
+1) Install mopidy `as per the mopidy docs <https://docs.mopidy.com/en/latest/installation/>`_
+
+2) Install dependencies::
 
     sudo apt-get install libasound2-dev
-    pip install Mopidy-ChoosMoos
 
-Or, if available, install the Debian/Ubuntu package from `apt.mopidy.com
-<http://apt.mopidy.com/>`_.
+3) Install Mopidy-ChoosMoos::
+
+    pip install Mopidy-ChoosMoos
 
 
 Configuration
@@ -36,7 +38,13 @@ Before starting Mopidy, you must add configuration for
 Mopidy-ChoosMoos to your Mopidy configuration file::
 
     [choosmoos]
-    # TODO: Add example of extension config
+    enabled = true
+    nfc_demo_app_location =
+    next_pin_number = 3
+    previous_pin_number = 4
+    volume_up_pin_number = 1
+    volume_down_pin_number = 2
+    play_pause_pin_number = 5
 
 
 Project resources
@@ -49,15 +57,6 @@ Project resources
 Credits
 =======
 
-- Original author: `Doron Horwitz <https://github.com/doronhorwitz`__
-- Current maintainer: `Doron Horwitz <https://github.com/doronhorwitz`__
+- Original author: `Doron Horwitz <https://github.com/doronhorwitz>`_
+- Current maintainer: `Doron Horwitz <https://github.com/doronhorwitz>`_
 - `Contributors <https://github.com/doronhorwitz/mopidy-choosmoos/graphs/contributors>`_
-
-
-Changelog
-=========
-
-v0.1.0 (UNRELEASED)
-----------------------------------------
-
-- Initial release.
