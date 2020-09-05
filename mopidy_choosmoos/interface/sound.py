@@ -3,7 +3,7 @@ from operator import add, sub
 try:
     from alsaaudio import Mixer
 except ModuleNotFoundError:
-    pass
+    from ..utils.dummy_mixer import DummyMixer as Mixer
 
 from mopidy_choosmoos.utils import floor_to_base_int
 
